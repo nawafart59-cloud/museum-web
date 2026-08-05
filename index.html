@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Web💖</title>
+    
+    <!-- Ikon Aplikasi Romantis -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ff4b72'/%3E%3Cstop offset='50%25' stop-color='%23ff6a88'/%3E%3Cstop offset='100%25' stop-color='%23ff99ac'/%3E%3C/linearGradient%3E%3ClinearGradient id='heartGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='100%25' stop-color='%23ffe6ec'/%3E%3C/linearGradient%3E%3Cfilter id='shadow' x='-10%25' y='-10%25' width='120%25' height='120%25'%3E%3CfeDropShadow dx='0' dy='12' stdDeviation='10' flood-color='%23000000' flood-opacity='0.25'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='512' height='512' rx='115' fill='url(%23bgGrad)'/%3E%3Ccircle cx='256' cy='200' r='180' fill='%23ffffff' opacity='0.12'/%3E%3Cpath filter='url(%23shadow)' d='M256 424C256 424 100 290 100 186C100 128 146 82 204 82C236 82 265 98 284 124C303 98 332 82 364 82C422 82 468 128 468 186C468 290 256 424 256 424Z' fill='url(%23heartGrad)'/%3E%3Cpath d='M380 120 L388 145 L413 153 L388 161 L380 186 L372 161 L347 153 L372 145 Z' fill='%23ffffff' opacity='0.9'/%3E%3Cpath d='M140 340 L146 358 L164 364 L146 370 L140 388 L134 370 L116 364 L134 358 Z' fill='%23ffffff' opacity='0.7'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ff4b72'/%3E%3Cstop offset='50%25' stop-color='%23ff6a88'/%3E%3Cstop offset='100%25' stop-color='%23ff99ac'/%3E%3C/linearGradient%3E%3ClinearGradient id='heartGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='100%25' stop-color='%23ffe6ec'/%3E%3C/linearGradient%3E%3Cfilter id='shadow' x='-10%25' y='-10%25' width='120%25' height='120%25'%3E%3CfeDropShadow dx='0' dy='12' stdDeviation='10' flood-color='%23000000' flood-opacity='0.25'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='512' height='512' rx='115' fill='url(%23bgGrad)'/%3E%3Ccircle cx='256' cy='200' r='180' fill='%23ffffff' opacity='0.12'/%3E%3Cpath filter='url(%23shadow)' d='M256 424C256 424 100 290 100 186C100 128 146 82 204 82C236 82 265 98 284 124C303 98 332 82 364 82C422 82 468 128 468 186C468 290 256 424 256 424Z' fill='url(%23heartGrad)'/%3E%3Cpath d='M380 120 L388 145 L413 153 L388 161 L380 186 L372 161 L347 153 L372 145 Z' fill='%23ffffff' opacity='0.9'/%3E%3Cpath d='M140 340 L146 358 L164 364 L146 370 L140 388 L134 370 L116 364 L134 358 Z' fill='%23ffffff' opacity='0.7'/%3E%3C/svg%3E">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDKs (App, Firestore & Messaging) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(3deg); }
+        }
+        .floating-element {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes bounce-short {
+            0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+            50% { transform: none; animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+        }
+        .animate-bounce-short { animation: bounce-short 1s infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-50 via-rose-50 to-peach-50 min-h-screen flex flex-col justify-between p-3 md:p-6 select-none">
+
+    <!-- Modal Sambutan & Izin Notifikasi Otomatis di Awal -->
+    <div id="welcomeModal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-pink-100 animate-bounce-short">
+            <div class="text-4xl mb-3">💌</div>
+            <h2 class="text-lg font-bold text-gray-800 mb-1">Hai Sayang! ✨</h2>
+            <p class="text-xs text-gray-500 mb-5 leading-relaxed">Galeri web yang aku bikin aku kumpulin semua jadi satu☺️</p>
+            <button onclick="mulaiWeb()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3 rounded-2xl shadow-lg shadow-pink-500/30 text-sm active:scale-95 transition">
+                Buka 💖
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Pendaftaran Service Worker & Tombol Mulai dengan VAPID Key -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then((registration) => {
+                console.log('Service Worker terdaftar:', registration);
+            }).catch((err) => {
+                console.log('Gagal daftar Service Worker:', err);
+            });
+        }
+
+        function mulaiWeb() {
+            if (typeof Notification !== 'undefined') {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        console.log('Notifikasi diizinkan!');
+                        
+                        // Meminta Token FCM menggunakan VAPID Key kamu
+                        const messaging = firebase.messaging();
+                        messaging.getToken({ 
+                            vapidKey: 'BLoa61PwDWIE4TtsDEmQ0ohZI-pAOoikwCT5zoRSbe3_MxoqRNIq7Pb6Gf8QhryRfyFpwriAOMdKTSY0fCKMVaA' 
+                        }).then((currentToken) => {
+                            if (currentToken) {
+                                console.log('FCM Token:', currentToken);
+                                // Simpan token ke Firestore
+                                db.collection("fcm_tokens").add({
+                                    token: currentToken,
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                            } else {
+                                console.log('Tidak ada token pendaftaran yang tersedia.');
+                            }
+                        }).catch((err) => {
+                            console.log('Gagal mendapatkan token:', err);
+                        });
+                    }
+                });
+            }
+            document.getElementById('welcomeModal').style.display = 'none';
+        }
+    </script>
+
+    <!-- Top Mini Decorative Bar -->
+    <div class="w-full max-w-3xl mx-auto flex justify-between items-center px-1">
+        <div class="flex items-center space-x-1.5 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full shadow-sm border border-pink-100 text-[11px] font-semibold text-rose-500">
+            <span>✨</span>
+            <span>Special Vault</span>
+        </div>
+        <div class="flex items-center space-x-1 text-xs text-rose-400 font-medium">
+            <span class="floating-element">🧸</span>
+            <span class="hidden sm:inline">Koleksi Spesial Kesayangan</span>
+        </div>
+    </div>
+
+    <!-- Header / Judul Utama (LANGKAH 1) -->
+    <div class="text-center mx-auto my-2 max-w-lg">
+        <h1 id="step1Title" class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight cursor-pointer leading-snug">
+            Kisah & Kejutan <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600">Kita Berdua</span> 💖
+        </h1>
+        <p class="text-gray-500 text-xs mt-1">
+            Pilih web kenangan kita di bawah ya sayangg~
+        </p>
+    </div>
+
+    <!-- Grid 6 Kartu Kompak (No-Scroll) -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-3xl w-full mx-auto my-2">
+        
+        <!-- KARTU 1 (LANGKAH 2: Klik Ikon Hati) -->
+        <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md hover:shadow-xl border border-pink-100 flex flex-col justify-between transition-all duration-300 relative group">
+            <div class="absolute -top-2 right-3 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                Favorit
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xl">🎮</span>
+                    <span id="step2Heart" class="cursor-pointer text-pink-200 hover:text-rose-500 text-lg transition" title="❤️">🤍</span>
+                </div>
+                <h3 class="font-bold text-xs md:text-sm text-gray-800 group-hover:text-rose-600 transition truncate">Game Web Pertama</h3>
+                <p class="text-gray-400 text-[10px] md:text-xs mt-0.5 line-clamp-2">
+                    Game web pertama yang aku bikin buat bujuk kamu☺️.
+                </p>
+            </div>
+            <a href="https://buatkamucantikk.netlify.app/" target="_blank" class="mt-3 block text-center bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white py-1.5 rounded-xl text-[11px] font-bold transition">
+                Buka &rarr;
+            </a>
+        </div>
+
+        <!-- KARTU 2 -->
+        <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md border border-pink-100 flex flex-col justify-between relative">
+            <div class="absolute -top-2 right-3 bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Spesial</div>
+            <div><div class="text-xl mb-2">🎁</div><h3 class="font-bold text-xs md:text-sm text-gray-800 truncate">Ulang Tahun</h3><p class="text-gray-400 text-[10px] mt-0.5 line-clamp-2">Kejutan interaktif ulang tahun.</p></div>
+            <a href="https://surprise-buat-kamu.netlify.app/" target="_blank" class="mt-3 block text-center bg-purple-50 hover:bg-purple-500 text-purple-600 hover:text-white py-1.5 rounded-xl text-[11px] font-bold transition">Buka &rarr;</a>
+        </div>
+
+        <!-- KARTU 3 -->
+        <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md border border-pink-100 flex flex-col justify-between relative">
+            <div class="absolute -top-2 right-3 bg-pink-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Sweet</div>
+            <div><div class="text-xl mb-2">💐</div><h3 class="font-bold text-xs md:text-sm text-gray-800 truncate">Girlfriend's Day</h3><p class="text-gray-400 text-[10px] mt-0.5 line-clamp-2">Halaman spesial kesayangan.</p></div>
+            <a href="https://girlfriends-days.netlify.app/" target="_blank" class="mt-3 block text-center bg-pink-50 hover:bg-pink-500 text-pink-600 hover:text-white py-1.5 rounded-xl text-[11px] font-bold transition">Buka &rarr;</a>
+        </div>
+
+        <!-- KARTU 4 -->
+        <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md border border-pink-100 flex flex-col justify-between">
+            <div><div class="text-xl mb-2">🧸</div><h3 class="font-bold text-xs md:text-sm text-gray-800 truncate">Web Game Ke-2</h3><p class="text-gray-400 text-[10px] mt-0.5 line-clamp-2">Game ke 2 yang aku bikin buat bujuk kamu sayangg 🫂</p></div>
+            <a href="https://spesialbuat-kamu.netlify.app/" target="_blank" class="mt-3 block text-center bg-amber-50 hover:bg-amber-500 text-amber-600 hover:text-white py-1.5 rounded-xl text-[11px] font-bold transition">Buka &rarr;</a>
+        </div>
+
+        <!-- KARTU 5 -->
+        <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md border border-pink-100 flex flex-col justify-between">
+            <div>
+                <div class="text-xl mb-2">💌</div>
+                <h3 class="font-bold text-xs md:text-sm text-gray-800 truncate">Bujuk Nyalain Streak🔥</h3>
+                <p class="text-gray-400 text-[10px] mt-0.5 leading-tight">Pertanyaan buat bujuk kamu nyalain streak tiktok🔥</p>
+            </div>
+            <a href="https://maafin-akusayangg.netlify.app/" target="_blank" class="mt-3 block text-center bg-emerald-50 hover:bg-emerald-500 text-emerald-600 hover:text-white py-1.5 rounded-xl text-[11px] font-bold transition">Buka &rarr;</a>
+        </div>
+
+        <!-- KARTU 6 -->
+        <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md border border-pink-100 flex flex-col justify-between">
+            <div><div class="text-xl mb-2">✨</div><h3 class="font-bold text-xs md:text-sm text-gray-800 truncate">Lagu Favorit🩷</h3><p class="text-gray-400 text-[10px] mt-0.5 line-clamp-2">Lagu favorit kamu dengan foto foto kita😍</p></div>
+            <a href="https://fotokita.netlify.app/" target="_blank" class="mt-3 block text-center bg-sky-50 hover:bg-sky-500 text-sky-600 hover:text-white py-1.5 rounded-xl text-[11px] font-bold transition">Buka &rarr;</a>
+        </div>
+
+    </div>
+
+    <!-- Footer (LANGKAH 3: Klik Tulisan Ini) -->
+    <footer class="text-center my-2">
+        <p id="step3Footer" class="text-[11px] text-gray-400 font-medium cursor-pointer hover:text-rose-500 transition">
+            Made with all my love, forever & always ❤️
+        </p>
+    </footer>
+
+    <!-- MODAL CHAT DARURAT -->
+    <div id="secretChatModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-md rounded-3xl p-5 shadow-2xl relative border border-pink-100 flex flex-col h-[500px]">
+            
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                <div>
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-1.5">
+                        <span>💬</span> Emergency Chat
+                    </h2>
+                    <p class="text-[11px] text-rose-500 font-medium">Chat Darurat 💖</p>
+                </div>
+                <button id="closeChatModal" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center font-bold text-sm transition">
+                    &times;
+                </button>
+            </div>
+            
+            <!-- Area Tampilan Pesan (Real-time dari Firestore) -->
+            <div id="chatMessages" class="flex-1 bg-gradient-to-b from-gray-50 to-pink-50/30 rounded-2xl p-3 overflow-y-auto my-3 space-y-2 text-xs border border-gray-100 flex flex-col">
+                <div class="text-center text-gray-400 my-auto">Memuat pesan...</div>
+            </div>
+
+            <!-- Input & Tombol Kirim Pesan -->
+            <div class="flex gap-2 pt-2 border-t border-gray-100">
+                <input type="text" id="messageInput" placeholder="Ketik pesan di sini..." class="flex-1 bg-gray-100 px-3.5 py-2 rounded-xl text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-400">
+                <button id="sendButton" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
+                    Kirim 🚀
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script Utama (Firebase + Chat + Notifikasi + Interaksi) -->
+    <script>
+        // ==========================================
+        // KONFIGURASI FIREBASE MILIKMU
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyALlSyj16Fv3FuRi5OJaIreh1BFGtLrX28",
+            authDomain: "spesialforyou-7a3d0.firebaseapp.com",
+            projectId: "spesialforyou-7a3d0",
+            storageBucket: "spesialforyou-7a3d0.firebasestorage.app",
+            messagingSenderId: "266013219393",
+            appId: "1:266013219393:web:0466fb066830e1cdf504c0"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ==========================================
+        // LOGIKA URUTAN KLIK RAHASIA (3 LANGKAH)
+        // ==========================================
+        let currentStep = 0;
+        const title = document.getElementById('step1Title');
+        const heart = document.getElementById('step2Heart');
+        const footer = document.getElementById('step3Footer');
+        const chatModal = document.getElementById('secretChatModal');
+        const closeChatModal = document.getElementById('closeChatModal');
+
+        title.addEventListener('click', () => { currentStep = 1; });
+
+        heart.addEventListener('click', () => {
+            if (currentStep === 1) {
+                currentStep = 2;
+                heart.textContent = "💖";
+            } else {
+                currentStep = 0;
+                heart.textContent = "🤍";
+            }
+        });
+
+        footer.addEventListener('click', () => {
+            if (currentStep === 2) {
+                chatModal.classList.remove('hidden');
+                chatModal.classList.add('flex');
+            }
+            currentStep = 0;
+            heart.textContent = "🤍";
+        });
+
+        closeChatModal.addEventListener('click', () => {
+            chatModal.classList.add('hidden');
+            chatModal.classList.remove('flex');
+        });
+
+        // ==========================================
+        // FUNGSI SUARA "DING" & BANNER NOTIFIKASI
+        // ==========================================
+        function tampilkanNotifikasiPesan(isiPesan) {
+            // Putar Suara "Ding"
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.volume = 0.8;
+            audio.play().catch(e => console.log("Audio diblokir browser"));
+
+            // Buat Banner Melayang di Atas Layar
+            const notifBanner = document.createElement('div');
+            notifBanner.className = 'fixed top-4 left-4 right-4 bg-white/95 backdrop-blur-md border border-pink-200 shadow-2xl rounded-2xl p-4 z-50 flex items-center space-x-3 animate-bounce-short';
+            notifBanner.innerHTML = `
+                <div class="text-3xl">💌</div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-xs text-pink-600">Pesan Baru dari Sayang! ✨</h4>
+                    <p class="text-xs text-gray-700 truncate">${isiPesan}</p>
+                </div>
+            `;
+            document.body.appendChild(notifBanner);
+
+            // Hilangkan banner otomatis setelah 4 detik
+            setTimeout(() => {
+                notifBanner.style.transition = 'all 0.5s ease';
+                notifBanner.style.opacity = '0';
+                notifBanner.style.transform = 'translateY(-20px)';
+                setTimeout(() => notifBanner.remove(), 500);
+            }, 4000);
+        }
+
+        //         // ==========================================
+        // LOGIKA REAL-TIME CHAT & NOTIFIKASI
+        // ==========================================
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            try {
+                // 1. Simpan pesan ke Firestore agar tampil secara real-time
+                await db.collection("emergency_messages").add({
+                    text: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 2. Panggil Netlify Function untuk memicu Push Notification ke HP pasangan
+                await fetch('/.netlify/functions/send-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                messageInput.value = "";
+            } catch (error) {
+                console.error("Gagal mengirim pesan atau notifikasi: ", error);
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        let isInitialLoad = true;
+
+        db.collection("emergency_messages")
+            .orderBy("timestamp", "asc")
+            .onSnapshot((snapshot) => {
+                chatMessages.innerHTML = "";
+                
+                if (snapshot.empty) {
+                    chatMessages.innerHTML = `<div class="text-center text-gray-400 my-auto">Belum ada pesan darurat. Ketik sesuatu di bawah ya! 💌</div>`;
+                    isInitialLoad = false;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const msg = doc.data();
+                    const div = document.createElement('div');
+                    div.className = "bg-white p-2.5 rounded-xl shadow-xs border border-pink-50 max-w-[80%] self-start text-gray-700";
+                    div.textContent = msg.text;
+                    chatMessages.appendChild(div);
+                });
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Hanya munculkan notifikasi suara & banner jika ada pesan BARU yang masuk
+                if (!isInitialLoad) {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            const newMsg = change.doc.data();
+                            tampilkanNotifikasiPesan(newMsg.text);
+                        }
+                    });
+                }
+                isInitialLoad = false;
+            });
+    </script>
+</body>
+</html>
