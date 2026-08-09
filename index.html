@@ -60,36 +60,6 @@
                 console.log('Gagal daftar Service Worker:', err);
             });
         }
-
-        function mulaiWeb() {
-            if (typeof Notification !== 'undefined') {
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        console.log('Notifikasi diizinkan!');
-                        
-                        // Meminta Token FCM menggunakan VAPID Key kamu
-                        const messaging = firebase.messaging();
-                        messaging.getToken({ 
-                            vapidKey: 'BLoa61PwDWIE4TtsDEmQ0ohZI-pAOoikwCT5zoRSbe3_MxoqRNIq7Pb6Gf8QhryRfyFpwriAOMdKTSY0fCKMVaA' 
-                        }).then((currentToken) => {
-                            if (currentToken) {
-                                console.log('FCM Token:', currentToken);
-                                // Disimpan menggunakan myDeviceId agar tidak duplikat/spam
-                                db.collection("fcm_tokens").doc(myDeviceId).set({
-                                    token: currentToken,
-                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                                }, { merge: true });
-                            } else {
-                                console.log('Tidak ada token pendaftaran yang tersedia.');
-                            }
-                        }).catch((err) => {
-                            console.log('Gagal mendapatkan token:', err);
-                        });
-                    }
-                });
-            }
-            document.getElementById('welcomeModal').style.display = 'none';
-        }
     </script>
 
     <!-- Top Mini Decorative Bar -->
@@ -238,6 +208,39 @@
         if (!myDeviceId) {
             myDeviceId = 'device_' + Math.random().toString(36).substring(2, 9);
             localStorage.setItem('chat_device_id', myDeviceId);
+        }
+
+        // ==========================================
+        // FUNGSI MULAI WEB & IZINKAN NOTIFIKASI
+        // ==========================================
+        function mulaiWeb() {
+            if (typeof Notification !== 'undefined') {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                        console.log('Notifikasi diizinkan!');
+                        
+                        // Meminta Token FCM menggunakan VAPID Key kamu
+                        const messaging = firebase.messaging();
+                        messaging.getToken({ 
+                            vapidKey: 'BLoa61PwDWIE4TtsDEmQ0ohZI-pAOoikwCT5zoRSbe3_MxoqRNIq7Pb6Gf8QhryRfyFpwriAOMdKTSY0fCKMVaA' 
+                        }).then((currentToken) => {
+                            if (currentToken) {
+                                console.log('FCM Token:', currentToken);
+                                // Diset ulang berdasarkan myDeviceId agar token tidak pernah duplikat/double
+                                db.collection("fcm_tokens").doc(myDeviceId).set({
+                                    token: currentToken,
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                            } else {
+                                console.log('Tidak ada token pendaftaran yang tersedia.');
+                            }
+                        }).catch((err) => {
+                            console.log('Gagal mendapatkan token:', err);
+                        });
+                    }
+                });
+            }
+            document.getElementById('welcomeModal').style.display = 'none';
         }
 
         // ==========================================
