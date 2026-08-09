@@ -74,10 +74,11 @@
                         }).then((currentToken) => {
                             if (currentToken) {
                                 console.log('FCM Token:', currentToken);
-                                db.collection("fcm_tokens").add({
+                                // Disimpan menggunakan myDeviceId agar tidak duplikat/spam
+                                db.collection("fcm_tokens").doc(myDeviceId).set({
                                     token: currentToken,
                                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                                });
+                                }, { merge: true });
                             } else {
                                 console.log('Tidak ada token pendaftaran yang tersedia.');
                             }
