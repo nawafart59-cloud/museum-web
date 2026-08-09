@@ -74,7 +74,6 @@
                         }).then((currentToken) => {
                             if (currentToken) {
                                 console.log('FCM Token:', currentToken);
-                                // Simpan token ke Firestore
                                 db.collection("fcm_tokens").add({
                                     token: currentToken,
                                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -117,7 +116,7 @@
     <!-- Grid 6 Kartu Kompak (No-Scroll) -->
     <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-3xl w-full mx-auto my-2">
         
-        <!-- KARTU 1 (LANGKAH 2: Klik Ikon Hati) -->
+        <!-- KARTU 1 -->
         <div class="bg-white/90 backdrop-blur-sm p-3.5 md:p-4 rounded-2xl shadow-md hover:shadow-xl border border-pink-100 flex flex-col justify-between transition-all duration-300 relative group">
             <div class="absolute -top-2 right-3 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
                 Favorit
@@ -175,7 +174,7 @@
 
     </div>
 
-    <!-- Footer (LANGKAH 3: Klik Tulisan Ini) -->
+    <!-- Footer -->
     <footer class="text-center my-2">
         <p id="step3Footer" class="text-[11px] text-gray-400 font-medium cursor-pointer hover:text-rose-500 transition">
             Made with all my love, forever & always ❤️
@@ -199,8 +198,8 @@
                 </button>
             </div>
             
-            <!-- Area Tampilan Pesan (Real-time dari Firestore) -->
-            <div id="chatMessages" class="flex-1 bg-gradient-to-b from-gray-50 to-pink-50/30 rounded-2xl p-3 overflow-y-auto my-3 space-y-2 text-xs border border-gray-100 flex flex-col">
+            <!-- Area Tampilan Pesan (Real-time WhatsApp/IG Style) -->
+            <div id="chatMessages" class="flex-1 bg-gradient-to-b from-gray-50 to-pink-50/30 rounded-2xl p-3 overflow-y-auto my-3 space-y-2.5 text-xs border border-gray-100 flex flex-col">
                 <div class="text-center text-gray-400 my-auto">Memuat pesan...</div>
             </div>
 
@@ -232,6 +231,13 @@
         // Inisialisasi Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // Buat ID unik untuk setiap HP secara otomatis agar chat bisa dibedakan (Kanan vs Kiri)
+        let myDeviceId = localStorage.getItem('chat_device_id');
+        if (!myDeviceId) {
+            myDeviceId = 'device_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('chat_device_id', myDeviceId);
+        }
 
         // ==========================================
         // LOGIKA URUTAN KLIK RAHASIA (3 LANGKAH)
@@ -273,12 +279,10 @@
         // FUNGSI SUARA "DING" & BANNER NOTIFIKASI
         // ==========================================
         function tampilkanNotifikasiPesan(isiPesan) {
-            // Putar Suara "Ding"
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
             audio.volume = 0.8;
             audio.play().catch(e => console.log("Audio diblokir browser"));
 
-            // Buat Banner Melayang di Atas Layar
             const notifBanner = document.createElement('div');
             notifBanner.className = 'fixed top-4 left-4 right-4 bg-white/95 backdrop-blur-md border border-pink-200 shadow-2xl rounded-2xl p-4 z-50 flex items-center space-x-3 animate-bounce-short';
             notifBanner.innerHTML = `
@@ -290,7 +294,6 @@
             `;
             document.body.appendChild(notifBanner);
 
-            // Hilangkan banner otomatis setelah 4 detik
             setTimeout(() => {
                 notifBanner.style.transition = 'all 0.5s ease';
                 notifBanner.style.opacity = '0';
@@ -299,8 +302,8 @@
             }, 4000);
         }
 
-        //         // ==========================================
-        // LOGIKA REAL-TIME CHAT & NOTIFIKASI
+        // ==========================================
+        // LOGIKA REAL-TIME CHAT & POSISI BUBBLE
         // ==========================================
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
@@ -311,9 +314,10 @@
             if (!text) return;
 
             try {
-                // 1. Simpan pesan ke Firestore agar tampil secara real-time
+                // 1. Simpan pesan ke Firestore dengan menyertakan ID perangkat pengirim
                 await db.collection("emergency_messages").add({
                     text: text,
+                    deviceId: myDeviceId,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -353,19 +357,32 @@
                 snapshot.forEach((doc) => {
                     const msg = doc.data();
                     const div = document.createElement('div');
-                    div.className = "bg-white p-2.5 rounded-xl shadow-xs border border-pink-50 max-w-[80%] self-start text-gray-700";
+                    
+                    // Cek apakah pesan ini dikirim dari HP kamu sendiri atau dari pasangan
+                    const isMyMessage = (msg.deviceId === myDeviceId);
+
+                    if (isMyMessage) {
+                        // Tampilan chat kamu (Kanan, Gradient Pink, Ujung kanan bawah agak lurus ala WA)
+                        div.className = "bg-gradient-to-r from-pink-500 to-rose-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm max-w-[80%] ml-auto text-xs break-words";
+                    } else {
+                        // Tampilan balasan dari dia (Kiri, Abu-abu terang, Ujung kiri bawah agak lurus ala WA)
+                        div.className = "bg-gray-100 text-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-gray-200 max-w-[80%] mr-auto text-xs break-words";
+                    }
+
                     div.textContent = msg.text;
                     chatMessages.appendChild(div);
                 });
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                // Hanya munculkan notifikasi suara & banner jika ada pesan BARU yang masuk
+                // Hanya munculkan notifikasi suara & banner jika pesan BARU datang dari HP LAIN (bukan HP sendiri)
                 if (!isInitialLoad) {
                     snapshot.docChanges().forEach((change) => {
                         if (change.type === "added") {
                             const newMsg = change.doc.data();
-                            tampilkanNotifikasiPesan(newMsg.text);
+                            if (newMsg.deviceId !== myDeviceId) {
+                                tampilkanNotifikasiPesan(newMsg.text);
+                            }
                         }
                     });
                 }
