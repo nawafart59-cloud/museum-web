@@ -268,6 +268,15 @@
             if (currentStep === 2) {
                 chatModal.classList.remove('hidden');
                 chatModal.classList.add('flex');
+
+                // Otomatis ubah status pesan dari dia jadi 'read' (centang biru) saat chat dibuka
+                db.collection("emergency_messages").get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        if (doc.data().deviceId !== myDeviceId && doc.data().status !== 'read') {
+                            db.collection("emergency_messages").doc(doc.id).update({ status: 'read' });
+                        }
+                    });
+                });
             }
             currentStep = 0;
             heart.textContent = "🤍";
@@ -411,7 +420,13 @@
                         if (change.type === "added") {
                             const newMsg = change.doc.data();
                             if (newMsg.deviceId !== myDeviceId) {
-                                tampilkanNotifikasiPesan(newMsg.text);
+                                // Jika modal chat sedang tertutup, bunyikan suara dan tampilkan banner notifikasi web dalam aplikasi
+                                if (chatModal.classList.contains('hidden')) {
+                                    tampilkanNotifikasiPesan(newMsg.text);
+                                } else {
+                                    // Jika modal chat sedang dibuka, otomatis ubah status pesan jadi 'read' (centang biru)
+                                    db.collection("emergency_messages").doc(change.doc.id).update({ status: 'read' });
+                                }
                             }
                         }
                     });
