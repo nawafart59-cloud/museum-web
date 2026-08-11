@@ -226,6 +226,7 @@
                         }).then((currentToken) => {
                             if (currentToken) {
                                 console.log('FCM Token:', currentToken);
+                                // Diset ulang berdasarkan myDeviceId agar token tidak pernah duplikat/double
                                 db.collection("fcm_tokens").doc(myDeviceId).set({
                                     token: currentToken,
                                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -268,15 +269,6 @@
             if (currentStep === 2) {
                 chatModal.classList.remove('hidden');
                 chatModal.classList.add('flex');
-
-                // Otomatis ubah status pesan dari dia jadi 'read' (centang biru) saat chat dibuka
-                db.collection("emergency_messages").get().then((querySnapshot) => {
-                    querySnapshot.forEach((doc) => {
-                        if (doc.data().deviceId !== myDeviceId && doc.data().status !== 'read') {
-                            db.collection("emergency_messages").doc(doc.id).update({ status: 'read' });
-                        }
-                    });
-                });
             }
             currentStep = 0;
             heart.textContent = "🤍";
@@ -326,24 +318,20 @@
             if (!text) return;
 
             try {
-                // 1. Simpan pesan ke Firestore dengan status awal 'sent' (centang abu-abu)
-                const docRef = await db.collection("emergency_messages").add({
+                // 1. Simpan pesan ke Firestore dengan menyertakan ID perangkat pengirim
+                await db.collection("emergency_messages").add({
                     text: text,
                     deviceId: myDeviceId,
-                    status: 'sent',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // 2. Panggil Netlify Function untuk memicu Push Notification beserta messageId
+                // 2. Panggil Netlify Function untuk memicu Push Notification ke HP pasangan
                 await fetch('/.netlify/functions/send-notification', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        text: text,
-                        messageId: docRef.id 
-                    })
+                    body: JSON.stringify({ text: text })
                 });
 
                 messageInput.value = "";
@@ -374,59 +362,30 @@
                     const msg = doc.data();
                     const div = document.createElement('div');
                     
+                    // Cek apakah pesan ini dikirim dari HP kamu sendiri atau dari pasangan
                     const isMyMessage = (msg.deviceId === myDeviceId);
 
-                    // Format Jam Pengiriman
-                    let timeString = "";
-                    if (msg.timestamp && msg.timestamp.toDate) {
-                        const date = msg.timestamp.toDate();
-                        timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    } else {
-                        timeString = "Baru saja";
-                    }
-
                     if (isMyMessage) {
-                        // Tampilan chat kamu (Kanan, dengan jam & centang abu-abu / biru)
-                        const checkIcon = msg.status === 'read' 
-                            ? `<span class="text-sky-300 font-bold" title="Dibaca">✓✓</span>` 
-                            : `<span class="text-gray-300" title="Terkirim">✓✓</span>`;
-
-                        div.className = "bg-gradient-to-r from-pink-500 to-rose-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm max-w-[80%] ml-auto text-xs break-words relative pb-5";
-                        div.innerHTML = `
-                            <div>${msg.text}</div>
-                            <div class="absolute bottom-1 right-2.5 flex items-center gap-1 text-[9px] text-pink-100/80">
-                                <span>${timeString}</span>
-                                <span>${checkIcon}</span>
-                            </div>
-                        `;
+                        // Tampilan chat kamu (Kanan, Gradient Pink, Ujung kanan bawah agak lurus ala WA)
+                        div.className = "bg-gradient-to-r from-pink-500 to-rose-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm max-w-[80%] ml-auto text-xs break-words";
                     } else {
-                        // Tampilan balasan dari dia (Kiri, dengan jam)
-                        div.className = "bg-gray-100 text-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-gray-200 max-w-[80%] mr-auto text-xs break-words relative pb-5";
-                        div.innerHTML = `
-                            <div>${msg.text}</div>
-                            <div class="absolute bottom-1 right-2.5 text-[9px] text-gray-400">
-                                ${timeString}
-                            </div>
-                        `;
+                        // Tampilan balasan dari dia (Kiri, Abu-abu terang, Ujung kiri bawah agak lurus ala WA)
+                        div.className = "bg-gray-100 text-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-gray-200 max-w-[80%] mr-auto text-xs break-words";
                     }
 
+                    div.textContent = msg.text;
                     chatMessages.appendChild(div);
                 });
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
+                // Hanya munculkan notifikasi suara & banner jika pesan BARU datang dari HP LAIN (bukan HP sendiri)
                 if (!isInitialLoad) {
                     snapshot.docChanges().forEach((change) => {
                         if (change.type === "added") {
                             const newMsg = change.doc.data();
                             if (newMsg.deviceId !== myDeviceId) {
-                                // Jika modal chat sedang tertutup, bunyikan suara dan tampilkan banner notifikasi web dalam aplikasi
-                                if (chatModal.classList.contains('hidden')) {
-                                    tampilkanNotifikasiPesan(newMsg.text);
-                                } else {
-                                    // Jika modal chat sedang dibuka, otomatis ubah status pesan jadi 'read' (centang biru)
-                                    db.collection("emergency_messages").doc(change.doc.id).update({ status: 'read' });
-                                }
+                                tampilkanNotifikasiPesan(newMsg.text);
                             }
                         }
                     });
