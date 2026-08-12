@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Siklus Cinta ❤️</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Animasi Transisi Tema */
+    .theme-transition {
+      transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+  </style>
+</head>
+
+<body id="appBody" class="theme-transition min-h-screen bg-rose-50/60 text-slate-800 font-sans pb-28">
+
+  <!-- Header Modern, Glassmorphic & Integrated Search -->
+  <header class="sticky top-0 z-20 backdrop-blur-xl bg-white/80 border-b border-rose-100/60 shadow-sm transition-all duration-500" id="appHeader">
+    <div class="max-w-md mx-auto px-4 pt-3.5 pb-3">
+      
+      <!-- Top Row: Logo & Theme Switcher -->
+      <div class="flex justify-between items-center mb-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-lg shadow-md shadow-rose-200 text-white transition-transform hover:scale-105" id="logoBox">
+            <span id="titleIcon">🌸</span>
+          </div>
+          <div>
+            <h1 class="text-base font-black tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 bg-clip-text text-transparent" id="appTitle">
+              Siklus Cinta
+            </h1>
+            <p class="text-[10px] text-slate-400 font-medium -mt-0.5" id="appSubtitle">Catatan & Prediksi Haid</p>
+          </div>
+        </div>
+        
+        <!-- Button Switch Mode -->
+        <button id="themeToggleBtn" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-200/80 bg-white/90 hover:bg-rose-50 hover:border-rose-300 transition-all duration-300 flex items-center gap-1.5 shadow-sm active:scale-95">
+          <span id="themeIcon">✨</span> <span id="themeText">Minimalis</span>
+        </button>
+      </div>
+
+      <!-- Fitur Pencarian / Search Bar -->
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+        <input type="text" id="searchInput" placeholder="Cari bulan, gejala, atau tanggal..." 
+          class="w-full pl-8 pr-8 py-1.5 bg-slate-100/80 focus:bg-white border border-transparent focus:border-rose-300 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200 transition-all shadow-inner">
+        
+        <!-- Tombol Clear Search (X) -->
+        <button id="clearSearchBtn" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 hidden">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Konten Utama (Tata Letak 1 Kolom Ringkas) -->
+  <main class="max-w-md mx-auto px-4 mt-3.5">
+    <div id="riwayatList" class="flex flex-col gap-3">
+      <!-- Loading state -->
+      <div class="text-center py-12 text-sm text-slate-400 animate-pulse">
+        Memuat data siklus cinta kalian... ✨
+      </div>
+    </div>
+  </main>
+
+  <!-- Floating Action Button (Tombol Pink + di Tengah Bawah) -->
+  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
+    <button id="openModalBtn" class="w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg hover:shadow-rose-300/50 flex items-center justify-center text-3xl font-light transition-all duration-300 hover:scale-110 active:scale-95">
+      +
+    </button>
+  </div>
+
+  <!-- Modal Input / Edit Data -->
+  <div id="modalOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl border border-rose-100 transition-all transform scale-95 opacity-0" id="modalBox">
+      
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5" id="modalTitle">
+          <span>💖</span> Catat Siklus Haid
+        </h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="haidForm" class="space-y-3">
+        <input type="hidden" id="editDocId" value="">
+
+        <!-- Container Input Multi-Siklus -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <label class="block text-xs font-semibold text-slate-600">Siklus Haid Bulan Ini</label>
+            <button type="button" id="addSiklusBtn" class="text-[11px] font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg border border-rose-200 transition flex items-center gap-1 active:scale-95">
+              <span>+</span> Tambah Siklus
+            </button>
+          </div>
+
+          <div id="siklusInputsContainer" class="space-y-2.5 max-h-52 overflow-y-auto pr-1">
+            <!-- Dynamic siklus rows populated via JS -->
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan Gejala / Perasaan</label>
+          <textarea id="inputCatatan" rows="2" placeholder="Apa yang kamu rasain bulan ini sayang? (Kram, pusing, mood swing, dll)..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+        </div>
+
+        <div class="pt-2 flex flex-col gap-2">
+          <div class="flex gap-2">
+            <button type="button" id="cancelBtn" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-xl text-xs transition">
+              Batal
+            </button>
+            <button type="submit" id="submitBtn" class="w-1/2 bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 rounded-xl text-xs transition shadow-md shadow-rose-200">
+              Simpan Data
+            </button>
+          </div>
+          
+          <!-- Tombol Hapus (Hanya muncul saat Edit) -->
+          <button type="button" id="deleteBtn" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium py-2 rounded-xl text-xs transition hidden flex items-center justify-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            Hapus Catatan Ini
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase Modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Konfigurasi Firebase Milikmu
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRovHQnOoK1EiYI12l8W4sxzDfhGl9g04",
+      authDomain: "kalender-haid-49ba8.firebaseapp.com",
+      projectId: "kalender-haid-49ba8",
+      storageBucket: "kalender-haid-49ba8.firebasestorage.app",
+      messagingSenderId: "889794868334",
+      appId: "1:889794868334:web:0275fda744ab1caf5ca27f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const haidRef = collection(db, "haid_tracker");
+
+    // State Theme & Data Cache
+    let currentTheme = 'romantic'; 
+    let rawDocs = [];
+    let searchQuery = '';
+
+    // Elements DOM
+    const body = document.getElementById('appBody');
+    const header = document.getElementById('appHeader');
+    const logoBox = document.getElementById('logoBox');
+    const appTitle = document.getElementById('appTitle');
+    const appSubtitle = document.getElementById('appSubtitle');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalBox = document.getElementById('modalBox');
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const haidForm = document.getElementById('haidForm');
+    const addSiklusBtn = document.getElementById('addSiklusBtn');
+    const siklusInputsContainer = document.getElementById('siklusInputsContainer');
+
+    // Vector Drop SVG Helper
+    function getDropSvg(colorHex = "#ffffff") {
+      return `<svg class="w-3.5 h-3.5 inline-block" viewBox="0 0 24 24" fill="${colorHex}">
+        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+      </svg>`;
+    }
+
+    // Dynamic Row Generator untuk Input Modal
+    function createSiklusRow(startVal = '', endVal = '', index = 0) {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = "siklus-row bg-slate-50 p-2.5 rounded-xl border border-slate-200 relative space-y-1.5";
+      
+      rowDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-0.5">
+          <span class="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Siklus #${index + 1}</span>
+          ${index > 0 ? `<button type="button" class="remove-siklus-btn text-xs text-red-400 hover:text-red-600 font-bold px-1">&times; Hapus</button>` : ''}
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Tgl Mulai</label>
+            <input type="date" required class="input-mulai w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-400" value="${startVal}">
+          </div>
+          <div>
+            <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Tgl Selesai</label>
+            <input type="date" class="input-selesai w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-rose-400" value="${endVal}">
+          </div>
+        </div>
+      `;
+
+      const removeBtn = rowDiv.querySelector('.remove-siklus-btn');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          rowDiv.remove();
+          updateSiklusLabels();
+        });
+      }
+
+      return rowDiv;
+    }
+
+    function updateSiklusLabels() {
+      const rows = siklusInputsContainer.querySelectorAll('.siklus-row');
+      rows.forEach((row, idx) => {
+        const label = row.querySelector('span');
+        if (label) label.innerText = `Siklus #${idx + 1}`;
+      });
+    }
+
+    addSiklusBtn.addEventListener('click', () => {
+      const currentCount = siklusInputsContainer.querySelectorAll('.siklus-row').length;
+      siklusInputsContainer.appendChild(createSiklusRow('', '', currentCount));
+    });
+
+    // Toggle Mode Tema
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'romantic' ? 'minimalist' : 'romantic';
+      applyTheme();
+      renderCards(); 
+    });
+
+    function applyTheme() {
+      if (currentTheme === 'minimalist') {
+        body.className = "theme-transition min-h-screen bg-slate-50 text-slate-900 font-sans pb-28";
+        header.className = "sticky top-0 z-20 backdrop-blur-xl bg-white/90 border-b border-slate-200 shadow-sm transition-colors duration-500";
+        logoBox.className = "w-9 h-9 rounded-2xl bg-slate-900 flex items-center justify-center text-lg shadow-md shadow-slate-200 text-white transition-transform hover:scale-105";
+        appTitle.className = "text-base font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent";
+        appSubtitle.className = "text-[10px] text-slate-500 font-medium -mt-0.5";
+        
+        document.getElementById('titleIcon').innerText = '🖤';
+        document.getElementById('themeIcon').innerText = '🌸';
+        document.getElementById('themeText').innerText = 'Romantis';
+        openModalBtn.className = "w-14 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-light transition-all duration-300 hover:scale-110 active:scale-95";
+      } else {
+        body.className = "theme-transition min-h-screen bg-rose-50/60 text-slate-800 font-sans pb-28";
+        header.className = "sticky top-0 z-20 backdrop-blur-xl bg-white/80 border-b border-rose-100/60 shadow-sm transition-colors duration-500";
+        logoBox.className = "w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-lg shadow-md shadow-rose-200 text-white transition-transform hover:scale-105";
+        appTitle.className = "text-base font-black tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 bg-clip-text text-transparent";
+        appSubtitle.className = "text-[10px] text-slate-400 font-medium -mt-0.5";
+
+        document.getElementById('titleIcon').innerText = '🌸';
+        document.getElementById('themeIcon').innerText = '✨';
+        document.getElementById('themeText').innerText = 'Minimalis';
+        openModalBtn.className = "w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg hover:shadow-rose-300/50 flex items-center justify-center text-3xl font-light transition-all duration-300 hover:scale-110 active:scale-95";
+      }
+    }
+
+    // Event Input Pencarian
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      if (searchQuery.length > 0) {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+      renderCards();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      renderCards();
+    });
+
+    // Controls Modal
+    function openModal(data = null) {
+      siklusInputsContainer.innerHTML = '';
+      
+      if (data) {
+        document.getElementById('editDocId').value = data.id;
+        document.getElementById('inputCatatan').value = data.catatan || '';
+        document.getElementById('modalTitle').innerText = 'Edit Siklus ✏️';
+        deleteBtn.classList.remove('hidden');
+
+        const list = getNormalizedSiklusList(data);
+        list.forEach((s, idx) => {
+          siklusInputsContainer.appendChild(createSiklusRow(s.tanggalMulai || '', s.tanggalSelesai || '', idx));
+        });
+      } else {
+        haidForm.reset();
+        document.getElementById('editDocId').value = '';
+        document.getElementById('modalTitle').innerText = 'Catat Siklus Haid 💖';
+        deleteBtn.classList.add('hidden');
+        siklusInputsContainer.appendChild(createSiklusRow('', '', 0));
+      }
+
+      modalOverlay.classList.remove('hidden');
+      setTimeout(() => {
+        modalBox.classList.remove('scale-95', 'opacity-0');
+        modalBox.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+
+    function closeModal() {
+      modalBox.classList.remove('scale-100', 'opacity-100');
+      modalBox.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        modalOverlay.classList.add('hidden');
+      }, 200);
+    }
+
+    openModalBtn.addEventListener('click', () => openModal());
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Hapus Data via Modal
+    deleteBtn.addEventListener('click', async () => {
+      const docId = document.getElementById('editDocId').value;
+      if (!docId) return;
+
+      if (confirm('Apakah kamu yakin ingin menghapus catatan siklus ini?')) {
+        try {
+          await deleteDoc(doc(db, "haid_tracker", docId));
+          closeModal();
+        } catch (err) {
+          console.error("Gagal menghapus:", err);
+          alert("Gagal menghapus data: " + err.message);
+        }
+      }
+    });
+
+    // Form Handler (Add / Edit)
+    haidForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const docId = document.getElementById('editDocId').value;
+      const catatan = document.getElementById('inputCatatan').value;
+
+      const rows = siklusInputsContainer.querySelectorAll('.siklus-row');
+      const siklusList = [];
+
+      rows.forEach(row => {
+        const tglMulai = row.querySelector('.input-mulai').value;
+        const tglSelesai = row.querySelector('.input-selesai').value || null;
+        if (tglMulai) {
+          siklusList.push({ tanggalMulai: tglMulai, tanggalSelesai: tglSelesai });
+        }
+      });
+
+      if (siklusList.length === 0) {
+        alert("Harap masukkan minimal 1 tanggal mulai haid.");
+        return;
+      }
+
+      const primaryMulai = siklusList[0].tanggalMulai;
+      const primarySelesai = siklusList[siklusList.length - 1].tanggalSelesai;
+
+      const payload = {
+        siklusList: siklusList,
+        tanggalMulai: primaryMulai,
+        tanggalSelesai: primarySelesai,
+        catatan: catatan
+      };
+
+      try {
+        if (docId) {
+          await updateDoc(doc(db, "haid_tracker", docId), payload);
+        } else {
+          await addDoc(haidRef, {
+            ...payload,
+            createdAt: new Date()
+          });
+        }
+        closeModal();
+      } catch (err) {
+        console.error("Gagal menyimpan:", err);
+        alert("Gagal menyimpan data: " + err.message);
+      }
+    });
+
+    // Helper Format & Normalisasi Data
+    function getNormalizedSiklusList(item) {
+      if (item.siklusList && Array.isArray(item.siklusList) && item.siklusList.length > 0) {
+        return item.siklusList;
+      }
+      return [{
+        tanggalMulai: item.tanggalMulai || '',
+        tanggalSelesai: item.tanggalSelesai || null
+      }];
+    }
+
+    function formatBulan(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr;
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    }
+
+    function getTglAngka(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr;
+      return parseInt(parts[2], 10);
+    }
+
+    function hitungDurasiSingle(startStr, endStr) {
+      if (!startStr) return 1;
+      const sp = startStr.split('-');
+      const start = new Date(parseInt(sp[0]), parseInt(sp[1]) - 1, parseInt(sp[2]));
+      
+      let end;
+      if (endStr) {
+        const ep = endStr.split('-');
+        end = new Date(parseInt(ep[0]), parseInt(ep[1]) - 1, parseInt(ep[2]));
+      } else {
+        end = new Date();
+        end.setHours(0,0,0,0);
+      }
+      
+      const diffTime = end - start;
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      return days > 0 ? days : 1;
+    }
+
+    function hitungDurasiTotal(siklusList) {
+      let total = 0;
+      siklusList.forEach(s => {
+        total += hitungDurasiSingle(s.tanggalMulai, s.tanggalSelesai);
+      });
+      return total;
+    }
+
+    function hitungPrediksi(startStr) {
+      if (!startStr) return '-';
+      const parts = startStr.split('-');
+      if (parts.length < 3) return '-';
+      const y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2]);
+      
+      const min = new Date(y, m, d + 4);
+      const max = new Date(y, m, d + 6);
+      
+      const opt = { day: 'numeric', month: 'short' };
+      return `${min.toLocaleDateString('id-ID', opt)} - ${max.toLocaleDateString('id-ID', opt)}`;
+    }
+
+    // Render Semua Kartu dengan Filter Search (Tata Letak 1 Kolom)
+    function renderCards() {
+      const riwayatList = document.getElementById('riwayatList');
+      riwayatList.innerHTML = '';
+
+      // Filter Data Berdasarkan Query Pencarian
+      const filteredDocs = rawDocs.filter((item) => {
+        if (!searchQuery) return true;
+        
+        const siklusList = getNormalizedSiklusList(item);
+        const namaBulan = formatBulan(siklusList[0].tanggalMulai).toLowerCase();
+        const catatan = (item.catatan || '').toLowerCase();
+        const isBelumSelesai = siklusList.some(s => !s.tanggalSelesai);
+        const statusStr = isBelumSelesai ? 'selesai' : 'haid sedang haid';
+
+        const matchDates = siklusList.some(s => 
+          (s.tanggalMulai || '').toLowerCase().includes(searchQuery) ||
+          (s.tanggalSelesai || '').toLowerCase().includes(searchQuery)
+        );
+
+        return namaBulan.includes(searchQuery) ||
+               matchDates ||
+               catatan.includes(searchQuery) ||
+               statusStr.includes(searchQuery);
+      });
+
+      if (filteredDocs.length === 0) {
+        if (searchQuery) {
+          riwayatList.innerHTML = `
+            <div class="text-center py-12 text-slate-400">
+              <p class="text-3xl mb-2">🔍</p>
+              <p class="text-xs font-semibold text-slate-600">Hasil tidak ditemukan</p>
+              <p class="text-[10px] mt-1 text-slate-400">Tidak ada riwayat yang cocok dengan "${searchQuery}".</p>
+            </div>`;
+        } else {
+          riwayatList.innerHTML = `
+            <div class="text-center py-16 text-slate-400">
+              <p class="text-3xl mb-2">💌</p>
+              <p class="text-xs font-medium">Belum ada riwayat haid.</p>
+              <p class="text-[10px] mt-1 text-slate-400">Klik tombol + untuk mulai mencatat.</p>
+            </div>`;
+        }
+        return;
+      }
+
+      filteredDocs.forEach((item) => {
+        const siklusList = getNormalizedSiklusList(item);
+        const durasi = hitungDurasiTotal(siklusList);
+        const isBelumSelesai = siklusList.some(s => !s.tanggalSelesai);
+
+        // Default: Normal (<= 5 Hari) - Warna Putih
+        let cardBgClass = "bg-white text-slate-800 border-rose-100 shadow-sm";
+        let circleClass = "bg-rose-500 font-bold shadow-sm";
+        let circleTextClass = "text-white";
+        let dotsClass = "text-rose-400 font-bold";
+        let monthTextClass = "text-slate-800";
+        let noteBgClass = "bg-slate-50 text-slate-600 border border-slate-100";
+        let badgeBg = "bg-rose-100 text-rose-600";
+        let dropColor = "#ffffff";
+
+        if (durasi > 10) {
+          // > 10 HARI: Merah
+          cardBgClass = "bg-red-600 text-white border-red-500 shadow-md";
+          circleClass = "bg-white font-bold shadow-sm";
+          circleTextClass = "text-red-600";
+          dotsClass = "text-white font-bold";
+          monthTextClass = "text-white font-extrabold";
+          noteBgClass = "bg-red-700/50 text-white placeholder-red-200 border border-red-400/30";
+          badgeBg = "bg-red-800 text-white";
+          dropColor = "#dc2626";
+        } else if (durasi > 5) {
+          // > 5 HARI (6-10 hari): Orange
+          cardBgClass = "bg-orange-500 text-white border-orange-400 shadow-md";
+          circleClass = "bg-white font-bold shadow-sm";
+          circleTextClass = "text-orange-600";
+          dotsClass = "text-white font-bold";
+          monthTextClass = "text-white font-extrabold";
+          noteBgClass = "bg-orange-600/50 text-white placeholder-orange-200 border border-orange-400/30";
+          badgeBg = "bg-orange-700 text-white";
+          dropColor = "#ea580c";
+        } else if (currentTheme === 'minimalist') {
+          // Normal Minimalist Mode
+          cardBgClass = "bg-white text-slate-900 border-slate-200 shadow-sm";
+          circleClass = "bg-slate-900 font-bold shadow-sm";
+          circleTextClass = "text-white";
+          dotsClass = "text-slate-400 font-bold";
+          monthTextClass = "text-slate-900";
+          noteBgClass = "bg-slate-50 text-slate-700 border border-slate-200";
+          badgeBg = "bg-slate-100 text-slate-700";
+          dropColor = "#ffffff";
+        }
+
+        const namaBulan = formatBulan(siklusList[0].tanggalMulai);
+        const prediksiStr = hitungPrediksi(siklusList[0].tanggalMulai);
+
+        // Generate Timeline Circles (Satu Kolom - Ruang Lebih Luas & Tidak Terpotong)
+        let timelineHtml = '';
+
+        if (siklusList.length === 1) {
+          // Normal 1 Siklus (2 Lingkaran)
+          const s1 = siklusList[0];
+          const tglMulaiAngka = getTglAngka(s1.tanggalMulai);
+          const tglSelesaiAngka = s1.tanggalSelesai ? getTglAngka(s1.tanggalSelesai) : getDropSvg(dropColor);
+
+          timelineHtml = `
+            <div class="flex items-center justify-center gap-6 my-2">
+              <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full ${circleClass} flex items-center justify-center text-xs ${circleTextClass}">
+                  ${tglMulaiAngka}
+                </div>
+                <span class="text-[10px] opacity-80 mt-0.5 font-medium">Mulai</span>
+              </div>
+              
+              <span class="${dotsClass} text-sm tracking-widest px-2">•••••</span>
+
+              <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full ${circleClass} flex items-center justify-center text-xs ${circleTextClass}">
+                  ${tglSelesaiAngka}
+                </div>
+                <span class="text-[10px] opacity-80 mt-0.5 font-medium">${s1.tanggalSelesai ? 'Selesai' : 'Haid'}</span>
+              </div>
+            </div>
+          `;
+        } else {
+          // Multi-Siklus / Haid Lagi (4 Lingkaran)
+          const s1 = siklusList[0];
+          const s2 = siklusList[1];
+
+          const c1Text = getTglAngka(s1.tanggalMulai);
+          const c2Text = s1.tanggalSelesai ? getTglAngka(s1.tanggalSelesai) : getDropSvg(dropColor);
+          const c3Text = getTglAngka(s2.tanggalMulai);
+          const c4Text = s2.tanggalSelesai ? getTglAngka(s2.tanggalSelesai) : getDropSvg(dropColor);
+
+          timelineHtml = `
+            <div class="flex items-center justify-between my-2 px-1">
+              <!-- Mulai 1 -->
+              <div class="flex flex-col items-center">
+                <div class="w-7 h-7 rounded-full ${circleClass} flex items-center justify-center text-[11px] ${circleTextClass}">
+                  ${c1Text}
+                </div>
+                <span class="text-[9px] opacity-80 mt-0.5 font-medium">Mulai 1</span>
+              </div>
+
+              <span class="${dotsClass} text-xs tracking-tighter">••</span>
+
+              <!-- Selesai 1 -->
+              <div class="flex flex-col items-center">
+                <div class="w-7 h-7 rounded-full ${circleClass} flex items-center justify-center text-[11px] ${circleTextClass}">
+                  ${c2Text}
+                </div>
+                <span class="text-[9px] opacity-80 mt-0.5 font-medium">Selesai 1</span>
+              </div>
+
+              <span class="${dotsClass} text-xs tracking-tighter">••</span>
+
+              <!-- Mulai 2 -->
+              <div class="flex flex-col items-center">
+                <div class="w-7 h-7 rounded-full ${circleClass} flex items-center justify-center text-[11px] ${circleTextClass}">
+                  ${c3Text}
+                </div>
+                <span class="text-[9px] opacity-80 mt-0.5 font-medium">Mulai 2</span>
+              </div>
+
+              <span class="${dotsClass} text-xs tracking-tighter">••</span>
+
+              <!-- Selesai 2 -->
+              <div class="flex flex-col items-center">
+                <div class="w-7 h-7 rounded-full ${circleClass} flex items-center justify-center text-[11px] ${circleTextClass}">
+                  ${c4Text}
+                </div>
+                <span class="text-[9px] opacity-80 mt-0.5 font-medium">${s2.tanggalSelesai ? 'Selesai 2' : 'Haid'}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        const card = document.createElement('div');
+        card.className = `${cardBgClass} rounded-2xl p-3.5 border transition-all duration-300 hover:scale-[1.01] cursor-pointer shadow-sm relative flex flex-col justify-between`;
+        
+        card.innerHTML = `
+          <!-- Header Nama Bulan & Badges -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <h2 class="text-xs font-bold tracking-wide ${monthTextClass}">${namaBulan}</h2>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeBg} font-semibold shrink-0">
+                  ${isBelumSelesai ? `Hari Ke-${durasi}` : `${durasi} Hari`}
+                </span>
+                <button class="delete-card-btn opacity-60 hover:opacity-100 hover:text-red-500 transition p-1" title="Hapus Catatan">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Timeline Siklus -->
+            ${timelineHtml}
+
+            <!-- Prediksi Selesai -->
+            <div class="text-[10px] opacity-90 text-center font-medium my-1">
+              ⏱️ Prediksi Haid Berikutnya: <span class="font-bold underline decoration-rose-300">${prediksiStr}</span>
+            </div>
+          </div>
+
+          <!-- Catatan Gejala -->
+          <div class="mt-2 pt-2 border-t border-black/5">
+            <p class="text-[9px] font-semibold mb-0.5 opacity-80">Catatan Gejala:</p>
+            <div class="${noteBgClass} p-2 rounded-xl text-[10px] italic leading-tight">
+              ${item.catatan ? `"${item.catatan}"` : `<span class="opacity-50">Tidak ada catatan</span>`}
+            </div>
+          </div>
+        `;
+
+        // Klik Kartu untuk Edit
+        card.addEventListener('click', () => openModal(item));
+
+        // Event Tombol Hapus Langsung di Kartu
+        const cardDeleteBtn = card.querySelector('.delete-card-btn');
+        cardDeleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation(); // Mencegah modal edit terbuka saat klik tombol hapus
+          if (confirm(`Hapus data haid bulan ${namaBulan}?`)) {
+            try {
+              await deleteDoc(doc(db, "haid_tracker", item.id));
+            } catch (err) {
+              console.error("Gagal menghapus:", err);
+              alert("Gagal menghapus data.");
+            }
+          }
+        });
+
+        riwayatList.appendChild(card);
+      });
+    }
+
+    // Real-Time Firebase Listener
+    onSnapshot(haidRef, (snapshot) => {
+      rawDocs = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.tanggalMulai || (data.siklusList && data.siklusList.length > 0)) {
+          rawDocs.push({
+            id: docSnap.id,
+            ...data
+          });
+        }
+      });
+
+      // Urutkan berdasarkan tanggal mulai terbaru di paling atas
+      rawDocs.sort((a, b) => {
+        const dateA = a.siklusList?.[0]?.tanggalMulai || a.tanggalMulai || '';
+        const dateB = b.siklusList?.[0]?.tanggalMulai || b.tanggalMulai || '';
+        return new Date(dateB) - new Date(dateA);
+      });
+
+      renderCards();
+    }, (error) => {
+      console.error("Firestore Listen Error:", error);
+    });
+  </script>
+</body>
+</html>
