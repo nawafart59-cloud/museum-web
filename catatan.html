@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Love Space 💖</title>
+    <title>Catatan Kita💖</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -108,15 +108,15 @@
                 </div>
                 <div>
                     <h1 id="header-title" class="text-xl font-bold bg-gradient-to-r from-rose-600 via-pink-500 to-rose-400 bg-clip-text text-transparent tracking-tight">
-                        Our Love Journal
+                        Catatan Kita
                     </h1>
-                    <p class="text-rose-400 text-[11px] font-medium mt-0.5">Catatan kenangan & momen manis kita</p>
+                    <p class="text-rose-400 text-[11px] font-medium mt-0.5"></p>
                 </div>
             </div>
             
             <!-- Tombol Switch Tema -->
             <button id="theme-btn" onclick="toggleTheme()" class="px-3 py-1.5 rounded-full bg-white border border-rose-200/60 text-[11px] font-semibold text-rose-700 shadow-2xs flex items-center gap-1 hover:bg-rose-50 transition active:scale-95">
-                🌸 Romantis
+                🌸
             </button>
         </div>
 
@@ -226,10 +226,10 @@
             const btn = document.getElementById('theme-btn');
             if (theme === 'elegant') {
                 document.body.classList.add('theme-elegant');
-                if (btn) btn.innerHTML = '✨ Minimalist';
+                if (btn) btn.innerHTML = '🔲';
             } else {
                 document.body.classList.remove('theme-elegant');
-                if (btn) btn.innerHTML = '🌸 Romantis';
+                if (btn) btn.innerHTML = '🌸';
             }
         }
 
