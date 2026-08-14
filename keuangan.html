@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kelola Keuangan</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Firebase JS SDK (v10 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
+  <style>
+    .theme-transition {
+      transition: background-color 0.4s ease-in-out, border-color 0.4s ease-in-out, color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+    }
+  </style>
+</head>
+<body className="min-h-screen font-sans pb-16 transition-colors duration-500 ease-in-out">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ==========================================
+    // KONFIGURASI FIREBASE
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDvilxV6SMf66eWqZbrkn_WuZd9yoxHZtg",
+      authDomain: "keuangan-4120d.firebaseapp.com",
+      projectId: "keuangan-4120d",
+      storageBucket: "keuangan-4120d.firebasestorage.app",
+      messagingSenderId: "759631987559",
+      appId: "1:759631987559:web:f8bfd7f2c0e74ea52ea5c2"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    const THEME_OPTIONS = [
+      { id: "pink", name: "Pink Romantis", class: "from-pink-400 via-rose-400 to-pink-500", shadow: "shadow-pink-200/80", btn: "from-pink-500 to-rose-500" },
+      { id: "sky", name: "Biru Muda Modern", class: "from-sky-400 via-blue-400 to-indigo-500", shadow: "shadow-sky-200/80", btn: "from-sky-500 to-blue-600" },
+      { id: "purple", name: "Ungu Soft", class: "from-purple-400 via-pink-400 to-rose-300", shadow: "shadow-purple-200/80", btn: "from-purple-500 to-pink-500" },
+    ];
+
+    const MONTHS_LIST = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    const formatIDR = (num) => {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
+    };
+
+    function App() {
+      const [page, setPage] = useState(1);
+      const [users, setUsers] = useState([]);
+      const [selectedUser, setSelectedUser] = useState(null);
+
+      const [months, setMonths] = useState([]);
+      const [selectedMonth, setSelectedMonth] = useState(null);
+
+      const [transactions, setTransactions] = useState([]);
+
+      const [appTheme, setAppTheme] = useState(() => {
+        return localStorage.getItem('app_global_theme') || 'romantis';
+      });
+
+      const isMinimal = appTheme === 'minimal';
+
+      const toggleAppTheme = () => {
+        const nextTheme = appTheme === 'romantis' ? 'minimal' : 'romantis';
+        setAppTheme(nextTheme);
+        localStorage.setItem('app_global_theme', nextTheme);
+      };
+
+      const [searchUser, setSearchUser] = useState('');
+      const [searchMonth, setSearchMonth] = useState('');
+      const [searchTx, setSearchTx] = useState('');
+
+      const [userModalOpen, setUserModalOpen] = useState(false);
+      const [editingUser, setEditingUser] = useState(null);
+
+      const [showMonthModal, setShowMonthModal] = useState(false);
+      const [txModalType, setTxModalType] = useState(null);
+      const [editingTx, setEditingTx] = useState(null);
+
+      useEffect(() => {
+        if (isMinimal) {
+          document.body.className = 'bg-zinc-950 text-zinc-100 min-h-screen font-sans pb-16 theme-transition';
+        } else {
+          document.body.className = 'bg-rose-50/40 text-slate-800 min-h-screen font-sans pb-16 theme-transition';
+        }
+      }, [isMinimal]);
+
+      useEffect(() => {
+        const unsubscribe = db.collection('users').onSnapshot((snapshot) => {
+          setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+      }, []);
+
+      useEffect(() => {
+        if (!selectedUser) return;
+        const unsubscribe = db.collection('users').doc(selectedUser.id).collection('months').onSnapshot((snapshot) => {
+          setMonths(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+      }, [selectedUser]);
+
+      useEffect(() => {
+        if (!selectedUser || !selectedMonth) return;
+        const unsubscribe = db
+          .collection('users').doc(selectedUser.id)
+          .collection('months').doc(selectedMonth.id)
+          .collection('transactions')
+          .orderBy('createdAt', 'desc')
+          .onSnapshot((snapshot) => {
+            setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          });
+        return () => unsubscribe();
+      }, [selectedUser, selectedMonth]);
+
+      const calculateSummary = (txList) => {
+        let pemasukanTotal = 0;
+        let pengeluaranTotal = 0;
+
+        txList.forEach(tx => {
+          const sum = tx.items && tx.items.length > 0 
+            ? tx.items.reduce((acc, item) => acc + Number(item.price || 0), 0)
+            : Number(tx.amount || 0);
+
+          if (tx.type === 'income') pemasukanTotal += sum;
+          else if (tx.type === 'expense') pengeluaranTotal += sum;
+        });
+
+        const uangTersisa = pemasukanTotal - pengeluaranTotal;
+        const today = new Date().getDate();
+        const rataRataPengeluaran = today > 0 ? Math.round(pengeluaranTotal / today) : pengeluaranTotal;
+
+        return { pemasukanTotal, pengeluaranTotal, uangTersisa, rataRataPengeluaran };
+      };
+
+      const currentSummary = calculateSummary(transactions);
+
+      const filteredUsers = users.filter(u => u.name?.toLowerCase().includes(searchUser.toLowerCase()));
+      
+      const filteredMonths = months.filter(m => 
+        m.monthName?.toLowerCase().includes(searchMonth.toLowerCase()) || 
+        String(m.year).includes(searchMonth)
+      );
+
+      const filteredTransactions = transactions.filter(tx => {
+        const query = searchTx.toLowerCase().trim();
+        if (!query) return true;
+
+        const matchNote = tx.note?.toLowerCase().includes(query);
+        const matchItems = tx.items?.some(item => item.name?.toLowerCase().includes(query));
+
+        let matchDate = false;
+        if (tx.createdAt) {
+          const dateObj = tx.createdAt.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt);
+          const days = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+          const months = ['januari', 'februari', 'maret', 'april', 'mei', 'juni', 'juli', 'agustus', 'september', 'oktober', 'november', 'desember'];
+
+          const dayName = days[dateObj.getDay()];
+          const dateNum = String(dateObj.getDate());
+          const monthName = months[dateObj.getMonth()];
+          const fullDateStr = `${dayName} ${dateNum} ${monthName}`;
+
+          matchDate = dayName.includes(query) ||
+                      dateNum === query ||
+                      monthName.includes(query) ||
+                      fullDateStr.includes(query);
+        }
+
+        return matchNote || matchItems || matchDate;
+      });
+
+      return (
+        <div className="max-w-md mx-auto px-4 pt-6 theme-transition">
+          
+          {/* TOGGLE BAR TEMA */}
+          <div className={`flex justify-between items-center mb-6 p-2 pl-4 rounded-2xl border shadow-sm theme-transition ${
+            isMinimal 
+              ? 'bg-white text-zinc-900 border-zinc-200 shadow-zinc-900/10' 
+              : 'bg-white/60 backdrop-blur-md border-slate-200/60'
+          }`}>
+            <span className="text-xs font-bold tracking-wide flex items-center gap-1.5">
+              {isMinimal ? '⚡ Clean Look (Putih)' : '💖 Romantis (Warna)'}
+            </span>
+            <button 
+              onClick={toggleAppTheme}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 transform active:scale-95 ${
+                isMinimal 
+                  ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50 shadow-sm' 
+                  : 'bg-slate-800 text-white shadow-md'
+              }`}
+            >
+              <span>{isMinimal ? '💖 Mode Warna' : '🤍 Mode Minimal Clean'}</span>
+            </button>
+          </div>
+
+          {/* HALAMAN 1 */}
+          {page === 1 && (
+            <div>
+              <header className="mb-6 text-center">
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-2 theme-transition ${
+                  isMinimal ? 'bg-white text-zinc-800 border border-zinc-200 shadow-sm' : 'bg-pink-100/80 text-pink-600'
+                }`}>
+                  <span>{isMinimal ? '📋' : '💖'}</span> Keuangan Pasangan
+                </div>
+                <h1 className={`text-2xl font-extrabold tracking-tight ${isMinimal ? 'text-white' : 'text-slate-800'}`}>Atur Keuangan Bersama</h1>
+                <p className={`text-xs mt-1 ${isMinimal ? 'text-zinc-400' : 'text-slate-500'}`}>Pilih profil untuk mengelola pengeluaran real-time</p>
+              </header>
+
+              <div className="relative mb-5">
+                <input 
+                  type="text" 
+                  placeholder="Cari nama profil..." 
+                  value={searchUser}
+                  onChange={e => setSearchUser(e.target.value)}
+                  className={`w-full rounded-xl py-2.5 pl-9 pr-4 text-xs focus:outline-none shadow-sm theme-transition ${
+                    isMinimal 
+                      ? 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400' 
+                      : 'bg-white border border-rose-100 text-slate-700 placeholder-slate-400 focus:border-pink-500'
+                  }`}
+                />
+                <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {filteredUsers.map((user) => (
+                  <div 
+                    key={user.id}
+                    className={`rounded-2xl p-4 flex flex-col justify-between h-48 relative group overflow-hidden transition-all duration-300 transform hover:-translate-y-1 theme-transition ${
+                      isMinimal 
+                        ? 'bg-white border border-zinc-200 text-zinc-900 shadow-xl shadow-black/20' 
+                        : `bg-gradient-to-br ${user.themeColor || 'from-pink-400 to-rose-500'} text-white shadow-lg ${user.themeShadow || 'shadow-pink-200'}`
+                    }`}
+                  >
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingUser(user);
+                        setUserModalOpen(true);
+                      }}
+                      className={`absolute top-3 right-3 p-1.5 rounded-full transition-all ${
+                        isMinimal ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200' : 'bg-white/20 hover:bg-white/40 text-white'
+                      }`}
+                      title="Edit Nama / Profil"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+
+                    <div 
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setPage(2);
+                      }} 
+                      className="cursor-pointer flex-1 flex flex-col justify-between"
+                    >
+                      <div>
+                        <h2 className="text-lg font-bold truncate pr-6">{user.name}</h2>
+                        <div className={`w-full h-[1px] my-2 ${isMinimal ? 'bg-zinc-200' : 'bg-white/40'}`}></div>
+                        <span className={`text-xs font-medium ${isMinimal ? 'text-zinc-500' : 'text-white/90'}`}>Lihat detail</span>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-auto">
+                        <span className="text-3xl">{user.emoji || '💖'}</span>
+                        <div className={`w-8 h-8 rounded-full shadow flex items-center justify-center transform group-hover:translate-x-1 transition-all ${
+                          isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 shadow-sm' : 'bg-white text-slate-800'
+                        }`}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => {
+                  setEditingUser(null);
+                  setUserModalOpen(true);
+                }}
+                className={`fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-3xl font-light transition-all transform hover:scale-105 active:scale-95 theme-transition ${
+                  isMinimal 
+                    ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50 shadow-black/40' 
+                    : 'bg-slate-900 text-white shadow-lg'
+                }`}
+              >
+                +
+              </button>
+
+              {userModalOpen && (
+                <UserModal 
+                  isMinimal={isMinimal}
+                  initialData={editingUser}
+                  onClose={() => setUserModalOpen(false)} 
+                  onSave={async (data) => {
+                    if (editingUser) {
+                      await db.collection('users').doc(editingUser.id).update(data);
+                    } else {
+                      await db.collection('users').add(data);
+                    }
+                    setUserModalOpen(false);
+                  }}
+                  onDelete={async () => {
+                    if (editingUser) {
+                      await db.collection('users').doc(editingUser.id).delete();
+                      setUserModalOpen(false);
+                    }
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* HALAMAN 2 */}
+          {page === 2 && selectedUser && (
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <button 
+                  onClick={() => setPage(1)} 
+                  className={`p-2.5 rounded-xl shadow-sm border transition-all ${
+                    isMinimal ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-100' : 'bg-white border-rose-100 text-slate-600 hover:bg-rose-50'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div>
+                  <h1 className={`text-xl font-extrabold ${isMinimal ? 'text-white' : 'text-slate-800'}`}>{selectedUser.name}</h1>
+                  <p className={`text-xs ${isMinimal ? 'text-zinc-400' : 'text-slate-500'}`}>Pilih bulan pengeluaran</p>
+                </div>
+              </div>
+
+              <div className="relative mb-5">
+                <input 
+                  type="text" 
+                  placeholder="Cari bulan/tahun..." 
+                  value={searchMonth}
+                  onChange={e => setSearchMonth(e.target.value)}
+                  className={`w-full rounded-xl py-2.5 pl-9 pr-4 text-xs focus:outline-none shadow-sm theme-transition ${
+                    isMinimal 
+                      ? 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400' 
+                      : 'bg-white border border-rose-100 text-slate-700 placeholder-slate-400 focus:border-pink-500'
+                  }`}
+                />
+                <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <div className="space-y-4">
+                {filteredMonths.map((m) => (
+                  <MonthCard 
+                    key={m.id} 
+                    monthData={m} 
+                    isMinimal={isMinimal}
+                    themeColor={selectedUser.themeColor}
+                    themeShadow={selectedUser.themeShadow}
+                    userId={selectedUser.id}
+                    onNavigate={() => {
+                      setSelectedMonth(m);
+                      setPage(3);
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setShowMonthModal(true)}
+                className={`w-full mt-6 py-3.5 px-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:opacity-95 transition-all transform active:scale-98 theme-transition ${
+                  isMinimal 
+                    ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50 shadow-black/30' 
+                    : `bg-gradient-to-r ${selectedUser.themeColor || 'from-pink-500 to-rose-500'} text-white ${selectedUser.themeShadow || 'shadow-pink-200'}`
+                }`}
+              >
+                <span>+ Tambah Bulan</span>
+              </button>
+
+              {showMonthModal && (
+                <MonthModal 
+                  isMinimal={isMinimal}
+                  themeColor={selectedUser.themeColor}
+                  onClose={() => setShowMonthModal(false)}
+                  onSave={async (monthName) => {
+                    await db.collection('users').doc(selectedUser.id).collection('months').add({
+                      monthName,
+                      year: new Date().getFullYear(),
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    setShowMonthModal(false);
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* HALAMAN 3 */}
+          {page === 3 && selectedUser && selectedMonth && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <button 
+                  onClick={() => setPage(2)} 
+                  className={`p-2.5 rounded-xl shadow-sm border transition-all ${
+                    isMinimal ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-100' : 'bg-white border-rose-100 text-slate-600 hover:bg-rose-50'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div>
+                  <span className={`text-xs font-bold px-3.5 py-1.5 rounded-full border shadow-sm theme-transition ${
+                    isMinimal ? 'bg-white text-zinc-900 border-zinc-200' : 'text-slate-800 bg-white border-slate-200'
+                  }`}>
+                    {selectedMonth.monthName} {selectedMonth.year}
+                  </span>
+                </div>
+              </div>
+
+              {/* Header Saldo */}
+              <div className={`rounded-2xl p-5 mb-5 shadow-sm border theme-transition ${
+                isMinimal ? 'bg-white border-zinc-200 text-zinc-900 shadow-xl' : 'bg-white border-rose-100 text-slate-800'
+              }`}>
+                <div className="flex items-start gap-3.5">
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-inner shrink-0 mt-0.5 ${
+                    isMinimal ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-emerald-100 text-emerald-600'
+                  }`}>
+                    💵
+                  </div>
+                  <div className="w-full overflow-hidden">
+                    <p className={`text-xs font-semibold ${isMinimal ? 'text-zinc-500' : 'text-slate-400'}`}>Sisa Saldo</p>
+                    <p className="text-2xl font-black tracking-tight break-all mt-0.5">
+                      {formatIDR(currentSummary.uangTersisa)}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-4">
+                      <button 
+                        onClick={() => setTxModalType('income')}
+                        className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all shadow-sm text-center transform active:scale-95 flex items-center justify-center gap-1 ${
+                          isMinimal 
+                            ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' 
+                            : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                        }`}
+                      >
+                        <span>+</span> Masuk
+                      </button>
+                      <button 
+                        onClick={() => setTxModalType('expense')}
+                        className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all shadow-sm text-center transform active:scale-95 flex items-center justify-center gap-1 ${
+                          isMinimal 
+                            ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' 
+                            : 'bg-rose-500 hover:bg-rose-600 text-white'
+                        }`}
+                      >
+                        <span>-</span> Keluar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`mt-4 pt-4 border-t grid grid-cols-2 gap-2.5 text-xs ${isMinimal ? 'border-zinc-200' : 'border-slate-100'}`}>
+                  <div className={`p-2.5 rounded-xl border ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-rose-50/50 border-rose-100/60'}`}>
+                    <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Sisa Bulan Ini</p>
+                    <p className="font-extrabold mt-0.5 text-emerald-600">{formatIDR(currentSummary.uangTersisa)}</p>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-rose-50/50 border-rose-100/60'}`}>
+                    <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Rata-rata / Hari</p>
+                    <p className="font-extrabold mt-0.5 text-amber-600">{formatIDR(currentSummary.rataRataPengeluaran)}</p>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-rose-50/50 border-rose-100/60'}`}>
+                    <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Total Pemasukan</p>
+                    <p className="font-extrabold mt-0.5 text-sky-600">{formatIDR(currentSummary.pemasukanTotal)}</p>
+                  </div>
+                  <div className={`p-2.5 rounded-xl border ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-rose-50/50 border-rose-100/60'}`}>
+                    <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Total Pengeluaran</p>
+                    <p className="font-extrabold mt-0.5 text-rose-600">{formatIDR(currentSummary.pengeluaranTotal)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Bar Halaman 3 */}
+              <div className="relative mb-4">
+                <input 
+                  type="text" 
+                  placeholder="Cari hari, tanggal (misal: Senin/13), bulan, barang..." 
+                  value={searchTx}
+                  onChange={e => setSearchTx(e.target.value)}
+                  className={`w-full rounded-xl py-2.5 pl-9 pr-4 text-xs focus:outline-none shadow-sm theme-transition ${
+                    isMinimal 
+                      ? 'bg-white border border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400' 
+                      : 'bg-white border border-rose-100 text-slate-700 placeholder-slate-400 focus:border-pink-500'
+                  }`}
+                />
+                <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              {/* List Transaksi Vertikal */}
+              <div className="space-y-3">
+                <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isMinimal ? 'text-zinc-400' : 'text-slate-400'}`}>Riwayat Laporan</h3>
+                {filteredTransactions.length === 0 ? (
+                  <div className={`text-center py-10 rounded-2xl border p-6 theme-transition ${
+                    isMinimal ? 'bg-white border-zinc-200 text-zinc-500 shadow-md' : 'bg-white border-rose-100 text-slate-500'
+                  }`}>
+                    <span className="text-3xl">📝</span>
+                    <p className="font-medium text-xs mt-2">Tidak ada laporan transaksi yang cocok.</p>
+                  </div>
+                ) : (
+                  filteredTransactions.map((tx) => (
+                    <TransactionCard 
+                      key={tx.id} 
+                      tx={tx} 
+                      isMinimal={isMinimal}
+                      themeColor={selectedUser.themeColor}
+                      themeShadow={selectedUser.themeShadow}
+                      onEdit={() => setEditingTx(tx)}
+                    />
+                  ))
+                )}
+              </div>
+
+              {txModalType && (
+                <TransactionModal 
+                  type={txModalType}
+                  isMinimal={isMinimal}
+                  themeColor={selectedUser.themeColor}
+                  onClose={() => setTxModalType(null)}
+                  onSave={async (data) => {
+                    const { dateStr, ...txData } = data;
+                    const customDate = dateStr ? new Date(dateStr + 'T12:00:00') : new Date();
+
+                    await db.collection('users').doc(selectedUser.id)
+                      .collection('months').doc(selectedMonth.id)
+                      .collection('transactions').add({
+                        ...txData,
+                        createdAt: firebase.firestore.Timestamp.fromDate(customDate)
+                      });
+                    setTxModalType(null);
+                  }}
+                />
+              )}
+
+              {editingTx && (
+                <TransactionModal 
+                  type={editingTx.type}
+                  initialData={editingTx}
+                  isMinimal={isMinimal}
+                  themeColor={selectedUser.themeColor}
+                  onClose={() => setEditingTx(null)}
+                  onSave={async (data) => {
+                    const { dateStr, ...txData } = data;
+                    const customDate = dateStr ? new Date(dateStr + 'T12:00:00') : new Date();
+
+                    await db.collection('users').doc(selectedUser.id)
+                      .collection('months').doc(selectedMonth.id)
+                      .collection('transactions').doc(editingTx.id).update({
+                        ...txData,
+                        createdAt: firebase.firestore.Timestamp.fromDate(customDate)
+                      });
+                    setEditingTx(null);
+                  }}
+                  onDelete={async () => {
+                    await db.collection('users').doc(selectedUser.id)
+                      .collection('months').doc(selectedMonth.id)
+                      .collection('transactions').doc(editingTx.id).delete();
+                    setEditingTx(null);
+                  }}
+                />
+              )}
+
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    function MonthCard({ monthData, isMinimal, themeColor, themeShadow, userId, onNavigate }) {
+      const [isOpen, setIsOpen] = useState(false);
+      const [txs, setTxs] = useState([]);
+
+      useEffect(() => {
+        const unsub = db.collection('users').doc(userId)
+          .collection('months').doc(monthData.id)
+          .collection('transactions').onSnapshot((snap) => {
+            setTxs(snap.docs.map(d => d.data()));
+          });
+        return () => unsub();
+      }, [userId, monthData.id]);
+
+      let pemasukanTotal = 0;
+      let pengeluaranTotal = 0;
+
+      txs.forEach(tx => {
+        const sum = tx.items && tx.items.length > 0 
+          ? tx.items.reduce((acc, item) => acc + Number(item.price || 0), 0)
+          : Number(tx.amount || 0);
+
+        if (tx.type === 'income') pemasukanTotal += sum;
+        if (tx.type === 'expense') pengeluaranTotal += sum;
+      });
+
+      const uangTersisa = pemasukanTotal - pengeluaranTotal;
+      const today = new Date().getDate();
+      const rataRataPengeluaran = today > 0 ? Math.round(pengeluaranTotal / today) : pengeluaranTotal;
+
+      return (
+        <div className={`rounded-2xl p-4 relative transition-all theme-transition ${
+          isMinimal 
+            ? 'bg-white border border-zinc-200 text-zinc-900 shadow-xl shadow-black/20' 
+            : `bg-gradient-to-r ${themeColor || 'from-pink-400 to-rose-500'} text-white shadow-lg ${themeShadow || 'shadow-pink-200'}`
+        }`}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">{monthData.monthName} {monthData.year}</h3>
+          </div>
+          
+          <div className={`w-full h-[1px] my-2 ${isMinimal ? 'bg-zinc-200' : 'bg-white/30'}`}></div>
+
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className={`text-xs font-semibold flex items-center gap-1 focus:outline-none ${isMinimal ? 'text-zinc-600 hover:text-zinc-900' : 'text-white/90 hover:underline'}`}
+          >
+            <span>Rincian</span>
+            <svg className={`w-3.5 h-3.5 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isOpen && (
+            <div className={`mt-3 pt-2 text-xs space-y-1.5 p-3 rounded-xl border theme-transition ${
+              isMinimal 
+                ? 'bg-zinc-50 border-zinc-200 text-zinc-800' 
+                : 'bg-black/10 border-white/20 text-white backdrop-blur-sm'
+            }`}>
+              <div className="flex justify-between">
+                <span>Uang Tersisa:</span>
+                <span className="font-bold">{formatIDR(uangTersisa)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Rata-rata/hari:</span>
+                <span className="font-bold">{formatIDR(rataRataPengeluaran)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Pemasukan:</span>
+                <span className="font-bold">{formatIDR(pemasukanTotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Pengeluaran:</span>
+                <span className="font-bold">{formatIDR(pengeluaranTotal)}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end mt-3">
+            <button 
+              onClick={onNavigate}
+              className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transform hover:scale-110 transition-all ${
+                isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' : 'bg-white text-slate-800'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function TransactionCard({ tx, isMinimal, themeColor, themeShadow, onEdit }) {
+      const isIncome = tx.type === 'income';
+
+      const totalAmount = tx.items && tx.items.length > 0 
+        ? tx.items.reduce((acc, i) => acc + Number(i.price || 0), 0)
+        : Number(tx.amount || 0);
+
+      // Mengambil Format Tanggal dan Hari (tanpa bulan & tahun)
+      let formattedDateDay = '';
+      if (tx.createdAt) {
+        const dateObj = tx.createdAt.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt);
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const dayName = days[dateObj.getDay()];
+        const dateNum = dateObj.getDate();
+        formattedDateDay = `${dayName}, ${dateNum}`;
+      }
+
+      return (
+        <div className={`rounded-2xl p-4 relative theme-transition ${
+          isMinimal 
+            ? 'bg-white border border-zinc-200 text-zinc-900 shadow-md shadow-black/10' 
+            : `bg-gradient-to-r ${themeColor || 'from-pink-400 to-rose-500'} text-white shadow-md ${themeShadow || 'shadow-pink-200'}`
+        }`}>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              {isIncome ? (
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-inner ${
+                  isMinimal ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-white/20 text-white'
+                }`}>
+                  💵
+                </div>
+              ) : (
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-inner ${
+                  isMinimal ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-white/20 text-white'
+                }`}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                  </svg>
+                </div>
+              )}
+
+              <div>
+                {/* Tanggal dan Hari Di Atas Nominal Angka */}
+                {formattedDateDay && (
+                  <span className={`text-[10px] font-extrabold uppercase tracking-wider block mb-0.5 ${
+                    isMinimal ? 'text-zinc-500' : 'text-white/80'
+                  }`}>
+                    📅 {formattedDateDay}
+                  </span>
+                )}
+                <p className={`text-xs font-semibold ${isMinimal ? 'text-zinc-500' : 'text-white/90'}`}>
+                  {isIncome ? 'Pemasukan Sebesar' : 'Pengeluaran Sebesar'}
+                </p>
+                <p className="text-lg font-black tracking-tight">{formatIDR(totalAmount)}</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={onEdit} 
+              className={`p-1.5 rounded-lg transition-all ${
+                isMinimal ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200' : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </div>
+
+          <div className={`mt-3 rounded-xl p-3 text-xs border theme-transition ${
+            isMinimal 
+              ? 'bg-zinc-50 border-zinc-200 text-zinc-800' 
+              : 'bg-black/15 border-white/10 text-white/95 backdrop-blur-sm'
+          }`}>
+            {tx.items && tx.items.length > 0 ? (
+              <ul className="space-y-1.5">
+                {tx.items.map((item, idx) => (
+                  <li key={idx} className={`flex justify-between border-b pb-1 last:border-0 last:pb-0 ${isMinimal ? 'border-zinc-200' : 'border-white/10'}`}>
+                    <span>📌 {item.name || 'Sumber / Barang'}</span>
+                    <span className="font-bold">{formatIDR(item.price)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>📌 <span className="italic">{tx.note || (isIncome ? 'Pemasukan' : 'Pengeluaran')}</span></p>
+            )}
+            {tx.note && tx.items && tx.items.length > 0 && (
+              <p className={`mt-2 text-[11px] border-t pt-1 ${isMinimal ? 'border-zinc-200 text-zinc-500' : 'border-white/10 text-white/80'}`}>Catatan: {tx.note}</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function UserModal({ isMinimal, initialData, onClose, onSave, onDelete }) {
+      const [name, setName] = useState(initialData?.name || '');
+      const [emoji, setEmoji] = useState(initialData?.emoji || '💖');
+      const [selectedTheme, setSelectedTheme] = useState(
+        THEME_OPTIONS.find(t => t.class === initialData?.themeColor) || THEME_OPTIONS[0]
+      );
+
+      return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className={`rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl border theme-transition ${
+            isMinimal ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white border-rose-100 text-slate-800'
+          }`}>
+            <h3 className="text-lg font-extrabold">
+              {initialData ? 'Edit Profil' : 'Tambah Profil Keuangan'}
+            </h3>
+
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Nama Orang</label>
+              <input 
+                type="text" 
+                placeholder="Contoh: Aku / Cewekku"
+                value={name} 
+                onChange={e => setName(e.target.value)}
+                className={`w-full rounded-xl p-3 text-sm focus:outline-none theme-transition ${
+                  isMinimal 
+                    ? 'bg-white border border-zinc-300 text-zinc-900 focus:border-zinc-500' 
+                    : 'bg-slate-50 border border-slate-200 text-slate-800 focus:border-pink-500'
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className={`text-xs font-semibold block mb-1.5 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pilih Emoji</label>
+              <div className="grid grid-cols-6 gap-2">
+                {['💖', '🥰', '😎', '👑', '🌷', '🐱'].map(e => (
+                  <button 
+                    key={e} 
+                    type="button" 
+                    onClick={() => setEmoji(e)}
+                    className={`py-2 text-center text-xl rounded-xl border transition-all ${
+                      emoji === e 
+                        ? (isMinimal ? 'border-zinc-900 bg-zinc-100 scale-105' : 'border-slate-800 bg-slate-100 scale-105') 
+                        : (isMinimal ? 'border-zinc-200 bg-white' : 'border-slate-200 bg-slate-50')
+                    }`}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pilih Tema Kolom</label>
+              <div className="grid grid-cols-2 gap-2">
+                {THEME_OPTIONS.map(t => (
+                  <button 
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSelectedTheme(t)}
+                    className={`p-2.5 text-xs font-bold rounded-xl text-left bg-gradient-to-r ${t.class} text-white border-2 ${selectedTheme.id === t.id ? 'border-zinc-900 shadow-md' : 'border-transparent opacity-90'}`}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={`flex justify-between items-center pt-3 border-t ${isMinimal ? 'border-zinc-200' : 'border-slate-100'}`}>
+              {initialData ? (
+                <button 
+                  type="button"
+                  onClick={onDelete} 
+                  className="text-xs font-bold text-rose-500 hover:underline"
+                >
+                  Hapus Profil
+                </button>
+              ) : <div></div>}
+
+              <div className="flex gap-2">
+                <button onClick={onClose} className={`px-4 py-2.5 rounded-xl text-xs font-bold ${isMinimal ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-slate-100 text-slate-600'}`}>Batal</button>
+                <button 
+                  onClick={() => name.trim() && onSave({ 
+                    name, 
+                    emoji, 
+                    themeColor: selectedTheme.class,
+                    themeShadow: selectedTheme.shadow,
+                    btnTheme: selectedTheme.btn
+                  })}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold shadow-md ${
+                    isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' : `bg-gradient-to-r ${selectedTheme.class} text-white`
+                  }`}
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MonthModal({ isMinimal, themeColor, onClose, onSave }) {
+      const [selectedMonth, setSelectedMonth] = useState(MONTHS_LIST[0]);
+
+      return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className={`rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl border theme-transition ${
+            isMinimal ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white border-rose-100 text-slate-800'
+          }`}>
+            <h3 className="text-lg font-extrabold">Pilih Bulan Keuangan</h3>
+
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Nama Bulan</label>
+              <select 
+                value={selectedMonth}
+                onChange={e => setSelectedMonth(e.target.value)}
+                className={`w-full rounded-xl p-3 text-sm focus:outline-none theme-transition ${
+                  isMinimal 
+                    ? 'bg-white border border-zinc-300 text-zinc-900 focus:border-zinc-500' 
+                    : 'bg-slate-50 border border-slate-200 text-slate-800 focus:border-pink-500'
+                }`}
+              >
+                {MONTHS_LIST.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={onClose} className={`px-4 py-2.5 rounded-xl text-xs font-bold ${isMinimal ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-slate-100 text-slate-600'}`}>Batal</button>
+              <button 
+                onClick={() => onSave(selectedMonth)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold shadow-md ${
+                  isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' : `bg-gradient-to-r ${themeColor || 'from-slate-700 to-slate-900'} text-white`
+                }`}
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function TransactionModal({ type, initialData, isMinimal, themeColor, onClose, onSave, onDelete }) {
+      const isIncome = type === 'income';
+
+      // Mengeset default tanggal ke Hari Ini (YYYY-MM-DD) atau dari data lama saat Edit
+      const [dateStr, setDateStr] = useState(() => {
+        if (initialData?.createdAt) {
+          const d = initialData.createdAt.toDate ? initialData.createdAt.toDate() : new Date(initialData.createdAt);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      });
+
+      const [items, setItems] = useState(
+        initialData?.items && initialData.items.length > 0 
+          ? initialData.items 
+          : [{ name: '', price: initialData?.amount || '' }]
+      );
+      const [note, setNote] = useState(initialData?.note || '');
+
+      const handleAddItem = () => {
+        setItems([...items, { name: '', price: '' }]);
+      };
+
+      const handleItemChange = (index, field, value) => {
+        const newItems = [...items];
+        newItems[index][field] = value;
+        setItems(newItems);
+      };
+
+      const handleAddZeros = (index) => {
+        const newItems = [...items];
+        const currentVal = String(newItems[index].price || '');
+        newItems[index].price = currentVal + '000';
+        setItems(newItems);
+      };
+
+      const handleRemoveItem = (index) => {
+        setItems(items.filter((_, i) => i !== index));
+      };
+
+      const handleSubmit = () => {
+        const validItems = items.filter(i => i.name.trim() !== '' && i.price !== '');
+        const calculatedTotal = validItems.reduce((acc, i) => acc + Number(i.price || 0), 0);
+
+        onSave({ 
+          type, 
+          items: validItems, 
+          amount: calculatedTotal,
+          note,
+          dateStr
+        });
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className={`rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto border theme-transition ${
+            isMinimal ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white border-rose-100 text-slate-800'
+          }`}>
+            <h3 className="text-lg font-extrabold">
+              {initialData ? 'Edit' : 'Tambah'} {isIncome ? 'Pemasukan' : 'Pengeluaran'}
+            </h3>
+
+            {/* Pemilih Tanggal Transaksi */}
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>
+                📅 Tanggal Transaksi
+              </label>
+              <input 
+                type="date" 
+                value={dateStr} 
+                onChange={e => setDateStr(e.target.value)}
+                className={`w-full rounded-xl p-2.5 text-xs focus:outline-none theme-transition ${
+                  isMinimal ? 'bg-white border border-zinc-300 text-zinc-900' : 'bg-slate-50 border border-slate-200 text-slate-800'
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2.5">
+              <label className={`text-xs font-semibold block ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>
+                {isIncome ? 'Sumber Pemasukan (Bisa Banyak Orang/Sumber)' : 'Daftar Barang / Pengeluaran'}
+              </label>
+
+              {items.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-1.5">
+                  <input 
+                    type="text" 
+                    placeholder={isIncome ? "Misal: Mama / Gaji" : "Misal: Makan"}
+                    value={item.name} 
+                    onChange={e => handleItemChange(idx, 'name', e.target.value)}
+                    className={`w-1/2 rounded-xl p-2.5 text-xs focus:outline-none theme-transition ${
+                      isMinimal ? 'bg-white border border-zinc-300 text-zinc-900' : 'bg-slate-50 border border-slate-200'
+                    }`}
+                  />
+                  
+                  <div className="relative w-1/2 flex items-center">
+                    <input 
+                      type="number" 
+                      placeholder="Rp"
+                      value={item.price} 
+                      onChange={e => handleItemChange(idx, 'price', e.target.value)}
+                      className={`w-full rounded-xl p-2.5 pr-12 text-xs focus:outline-none theme-transition ${
+                        isMinimal ? 'bg-white border border-zinc-300 text-zinc-900' : 'bg-slate-50 border border-slate-200'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddZeros(idx)}
+                      className={`absolute right-1 px-1.5 py-1 text-[10px] font-extrabold rounded-lg transition-all active:scale-90 ${
+                        isMinimal ? 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200 border border-zinc-300' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      }`}
+                      title="Tambah 000"
+                    >
+                      +000
+                    </button>
+                  </div>
+
+                  {items.length > 1 && (
+                    <button onClick={() => handleRemoveItem(idx)} className="text-rose-500 hover:text-rose-700 font-bold px-1 text-xs">
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <button 
+                type="button" 
+                onClick={handleAddItem}
+                className={`mt-1 text-xs font-bold flex items-center gap-1 hover:underline ${
+                  isMinimal ? 'text-zinc-800' : 'text-slate-700'
+                }`}
+              >
+                + Tambah {isIncome ? 'Sumber Lain' : 'Barang Lagi'}
+              </button>
+            </div>
+
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pin Catatan Tambahan</label>
+              <input 
+                type="text" 
+                placeholder="Misal: Dikasih pas ulang tahun"
+                value={note} 
+                onChange={e => setNote(e.target.value)}
+                className={`w-full rounded-xl p-2.5 text-xs focus:outline-none theme-transition ${
+                  isMinimal ? 'bg-white border border-zinc-300 text-zinc-900' : 'bg-slate-50 border border-slate-200'
+                }`}
+              />
+            </div>
+
+            <div className={`flex justify-between items-center pt-3 border-t ${isMinimal ? 'border-zinc-200' : 'border-slate-100'}`}>
+              {initialData && onDelete ? (
+                <button onClick={onDelete} className="text-xs font-bold text-rose-500 hover:underline">Hapus</button>
+              ) : <div></div>}
+
+              <div className="flex gap-2">
+                <button onClick={onClose} className={`px-4 py-2.5 rounded-xl text-xs font-bold ${isMinimal ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-slate-100 text-slate-600'}`}>Batal</button>
+                <button 
+                  onClick={handleSubmit}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold shadow-md ${
+                    isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' : `bg-gradient-to-r ${themeColor || 'from-slate-700 to-slate-900'} text-white`
+                  }`}
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
