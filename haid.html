@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Siklus Cinta ❤️</title>
+  <title>Siklus Simerah</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Animasi Transisi Tema */
@@ -27,9 +27,9 @@
           </div>
           <div>
             <h1 class="text-base font-black tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 bg-clip-text text-transparent" id="appTitle">
-              Siklus Cinta
+              Siklus Simerah
             </h1>
-            <p class="text-[10px] text-slate-400 font-medium -mt-0.5" id="appSubtitle">Catatan & Prediksi Haid</p>
+            <p class="text-[10px] text-slate-400 font-medium -mt-0.5" id="appSubtitle">Kalender & Prediksi Simerah</p>
           </div>
         </div>
         
@@ -57,6 +57,11 @@
         </button>
       </div>
 
+      <!-- KOLOM PERINGATAN PREDIKSI HAID BULAN DEPAN -->
+      <div id="predictionBanner" class="mt-2.5 p-3 rounded-2xl bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-rose-400/10 border border-rose-200/80 shadow-sm hidden transition-all">
+        <!-- Konten Diisi Dinamis oleh JavaScript -->
+      </div>
+
     </div>
   </header>
 
@@ -65,7 +70,7 @@
     <div id="riwayatList" class="flex flex-col gap-3">
       <!-- Loading state -->
       <div class="text-center py-12 text-sm text-slate-400 animate-pulse">
-        Memuat data siklus cinta kalian... ✨
+        Memuat data siklus Simerah... ✨
       </div>
     </div>
   </main>
@@ -83,7 +88,7 @@
       
       <div class="flex justify-between items-center mb-4">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5" id="modalTitle">
-          <span>💖</span> Catat Siklus Haid
+          <span>💖</span> Kalender Siklus Simerah
         </h3>
         <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
       </div>
@@ -135,7 +140,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Konfigurasi Firebase Milikmu
+    // Konfigurasi Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBRovHQnOoK1EiYI12l8W4sxzDfhGl9g04",
       authDomain: "kalender-haid-49ba8.firebaseapp.com",
@@ -164,6 +169,7 @@
     
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const predictionBanner = document.getElementById('predictionBanner');
 
     const modalOverlay = document.getElementById('modalOverlay');
     const modalBox = document.getElementById('modalBox');
@@ -403,6 +409,14 @@
       return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
     }
 
+    function formatTanggalSingkat(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr;
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    }
+
     function getTglAngka(dateStr) {
       if (!dateStr) return '';
       const parts = dateStr.split('-');
@@ -450,8 +464,95 @@
       return `${min.toLocaleDateString('id-ID', opt)} - ${max.toLocaleDateString('id-ID', opt)}`;
     }
 
+    // HITUNG PREDIKSI HAID BULAN DEPAN (RATA-RATA MEDIS 28 HARI, RENTANG 21 - 35 HARI)
+    function renderPredictionBanner() {
+      if (!rawDocs || rawDocs.length === 0) {
+        predictionBanner.classList.add('hidden');
+        return;
+      }
+
+      // Ambil riwayat terbaru (HPHT / Hari Pertama Haid Terakhir)
+      const latestItem = rawDocs[0];
+      const siklusList = getNormalizedSiklusList(latestItem);
+      const latestStartStr = siklusList[0].tanggalMulai;
+      const lastSiklusItem = siklusList[siklusList.length - 1];
+      const isSelesai = !!lastSiklusItem.tanggalSelesai;
+
+      // Banner ditampilkan terutama ketika haid bulan ini sudah selesai
+      if (!latestStartStr || !isSelesai) {
+        predictionBanner.classList.add('hidden');
+        return;
+      }
+
+      const parts = latestStartStr.split('-');
+      if (parts.length < 3) {
+        predictionBanner.classList.add('hidden');
+        return;
+      }
+
+      const hpht = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+
+      // 1. Estimasi Utama medis: Rata-rata siklus 28 hari
+      const target28 = new Date(hpht);
+      target28.setDate(hpht.getDate() + 28);
+
+      // 2. Rentang Normal Medis: 21 s/d 35 hari
+      const min21 = new Date(hpht);
+      min21.setDate(hpht.getDate() + 21);
+
+      const max35 = new Date(hpht);
+      max35.setDate(hpht.getDate() + 35);
+
+      const opt = { day: 'numeric', month: 'short' };
+      const strTarget = target28.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      const strMin = min21.toLocaleDateString('id-ID', opt);
+      const strMax = max35.toLocaleDateString('id-ID', opt);
+
+      // Hitung sisa hari dari hari ini
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      const diffTime = target28 - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let countdownBadge = '';
+      if (diffDays > 0) {
+        countdownBadge = `<span class="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-full">⏳ ~${diffDays} Hari Lagi</span>`;
+      } else if (diffDays === 0) {
+        countdownBadge = `<span class="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full animate-bounce">⚠️ Diperkirakan Hari Ini</span>`;
+      } else {
+        countdownBadge = `<span class="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">⚡ Terlewat ${Math.abs(diffDays)} Hari</span>`;
+      }
+
+      predictionBanner.innerHTML = `
+        <div class="flex justify-between items-start mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs">🚨</span>
+            <span class="text-[11px] font-extrabold text-rose-700 tracking-wide uppercase">Prediksi Haid Bulan Depan</span>
+          </div>
+          ${countdownBadge}
+        </div>
+
+        <div class="mt-1 flex items-baseline justify-between">
+          <div>
+            <p class="text-[10px] text-slate-500">Perkiraan Utama (Siklus 28 Hari):</p>
+            <p class="text-xs font-black text-rose-600">${strTarget}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[9px] text-slate-400">Rentang Normal (21-35 Hari):</p>
+            <p class="text-[10px] font-bold text-slate-700">${strMin} - ${strMax}</p>
+          </div>
+        </div>
+      `;
+
+      predictionBanner.classList.remove('hidden');
+    }
+
     // Render Semua Kartu dengan Filter Search (Tata Letak 1 Kolom)
     function renderCards() {
+      // Update Banner Prediksi Bulan Depan lebih dahulu
+      renderPredictionBanner();
+
       const riwayatList = document.getElementById('riwayatList');
       riwayatList.innerHTML = '';
 
@@ -545,7 +646,20 @@
         const namaBulan = formatBulan(siklusList[0].tanggalMulai);
         const prediksiStr = hitungPrediksi(siklusList[0].tanggalMulai);
 
-        // Generate Timeline Circles (Satu Kolom - Ruang Lebih Luas & Tidak Terpotong)
+        // PENYESUAIAN TEKS PREDIKSI / STATUS HAID SELESAI
+        const lastSiklusItem = siklusList[siklusList.length - 1];
+        let statusTeksHtml = '';
+
+        if (!isBelumSelesai && lastSiklusItem.tanggalSelesai) {
+          // Ketika haid sudah selesai -> tampilkan Selesai (Tanggal Selesai)
+          const tglSelesaiFormatted = formatTanggalSingkat(lastSiklusItem.tanggalSelesai);
+          statusTeksHtml = `⏱️ Status: <span class="font-bold">Selesai (${tglSelesaiFormatted})</span>`;
+        } else {
+          // Ketika haid masih berlangsung -> tampilkan estimasi prediksi selesai
+          statusTeksHtml = `⏱️ Prediksi Haid Selesai: <span class="font-bold underline decoration-rose-300">${prediksiStr}</span>`;
+        }
+
+        // Generate Timeline Circles (Satu Kolom)
         let timelineHtml = '';
 
         if (siklusList.length === 1) {
@@ -647,9 +761,9 @@
             <!-- Timeline Siklus -->
             ${timelineHtml}
 
-            <!-- Prediksi Selesai -->
+            <!-- Status / Prediksi Selesai Haid -->
             <div class="text-[10px] opacity-90 text-center font-medium my-1">
-              ⏱️ Prediksi Haid Berikutnya: <span class="font-bold underline decoration-rose-300">${prediksiStr}</span>
+              ${statusTeksHtml}
             </div>
           </div>
 
