@@ -34,12 +34,14 @@ exports.handler = async function(event, context) {
             return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token.' }) };
         }
 
-        // Mengirim HANYA payload 'data' agar tidak terjadi double notifikasi
         const message = {
-            data: {
+            notification: {
                 title: "Pesan Baru dari Sayang! 💖",
-                text: text || "Ada pesan darurat baru untukmu.",
-                url: "https://museum-web.netlify.app/"
+                body: text || "Ada pesan darurat baru untukmu."
+            },
+            data: {
+                text: text || "",
+                url: "https://sign-of-love.netlify.app/"
             },
             tokens: tokens
         };
