@@ -3,7 +3,6 @@ const admin = require('firebase-admin');
 if (!admin.apps.length) {
     let serviceAccount;
     try {
-        // Mendukung format JSON biasa maupun Base64
         const envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
         if (envVal.startsWith('{')) {
             serviceAccount = JSON.parse(envVal);
@@ -38,19 +37,21 @@ exports.handler = async function(event, context) {
         });
 
         if (tokens.length === 0) {
-            return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token terdaftar.' }) };
+            return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token.' }) };
         }
 
-        // Mengirim pesan ke tiap token secara terpisah agar pasti masuk
+        // Kirim ke tiap token secara independen
         const sendPromises = tokens.map(token => {
             return admin.messaging().send({
                 token: token,
+                // Masukkan detail ke objek notification & data
                 notification: {
                     title: "Pesan Baru dari Sayang! 💖",
                     body: text || "Ada pesan darurat baru untukmu."
                 },
                 data: {
-                    text: text || "",
+                    title: "Pesan Baru dari Sayang! 💖",
+                    body: text || "Ada pesan darurat baru untukmu.",
                     url: "https://sign-of-love.netlify.app/"
                 }
             });
