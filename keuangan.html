@@ -2,8 +2,14 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Kelola Keuangan</title>
+
+  <!-- PWA & Mobile Optimization -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#fff1f2" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +34,7 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo } = React;
 
     // ==========================================
     // KONFIGURASI FIREBASE
@@ -53,6 +59,12 @@
       { id: "purple", name: "Ungu Soft", class: "from-purple-400 via-pink-400 to-rose-300", shadow: "shadow-purple-200/80", btn: "from-purple-500 to-pink-500" },
     ];
 
+    const EMOJI_PICKER_OPTIONS = [
+      '💖', '🥰', '😎', '👑', '🌷', '🐱', 
+      '🎀', '🧸', '🌸', '✨', '💍', '💌', 
+      '🤍', '⭐', '🍓', '☕', '🐥', '🦄'
+    ];
+
     const MONTHS_LIST = [
       "Januari", "Februari", "Maret", "April", "Mei", "Juni",
       "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -61,6 +73,69 @@
     const formatIDR = (num) => {
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
     };
+
+    // ==========================================
+    // VECTOR SVG ICONS (PROFESIONAL & CLEAN)
+    // ==========================================
+    const IconWallet = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+    );
+
+    const IconPlus = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/>
+      </svg>
+    );
+
+    const IconMinus = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4"/>
+      </svg>
+    );
+
+    const IconCalendar = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+    );
+
+    const IconSearch = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    );
+
+    const IconEdit = () => (
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+      </svg>
+    );
+
+    const IconArrowLeft = () => (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    );
+
+    const IconChevronDown = () => (
+      <svg className="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    );
+
+    const IconSparkles = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+      </svg>
+    );
+
+    const IconLayout = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+      </svg>
+    );
 
     function App() {
       const [page, setPage] = useState(1);
@@ -71,6 +146,7 @@
       const [selectedMonth, setSelectedMonth] = useState(null);
 
       const [transactions, setTransactions] = useState([]);
+      const [allUserMonthsTx, setAllUserMonthsTx] = useState({});
 
       const [appTheme, setAppTheme] = useState(() => {
         return localStorage.getItem('app_global_theme') || 'romantis';
@@ -91,7 +167,9 @@
       const [userModalOpen, setUserModalOpen] = useState(false);
       const [editingUser, setEditingUser] = useState(null);
 
-      const [showMonthModal, setShowMonthModal] = useState(false);
+      const [monthModalOpen, setMonthModalOpen] = useState(false);
+      const [editingMonth, setEditingMonth] = useState(null);
+
       const [txModalType, setTxModalType] = useState(null);
       const [editingTx, setEditingTx] = useState(null);
 
@@ -118,6 +196,23 @@
         return () => unsubscribe();
       }, [selectedUser]);
 
+      // Ambil transaksi seluruh bulan untuk kalkulasi SALDO BERJALAN OTOMATIS
+      useEffect(() => {
+        if (!selectedUser || months.length === 0) return;
+        const unsubs = months.map(m => {
+          return db.collection('users').doc(selectedUser.id)
+            .collection('months').doc(m.id)
+            .collection('transactions')
+            .onSnapshot(snap => {
+              setAllUserMonthsTx(prev => ({
+                ...prev,
+                [m.id]: snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+              }));
+            });
+        });
+        return () => unsubs.forEach(unsub => unsub());
+      }, [selectedUser, months]);
+
       useEffect(() => {
         if (!selectedUser || !selectedMonth) return;
         const unsubscribe = db
@@ -131,7 +226,37 @@
         return () => unsubscribe();
       }, [selectedUser, selectedMonth]);
 
-      const calculateSummary = (txList) => {
+      // Urutkan Bulan Secara Kronologis
+      const sortedMonths = useMemo(() => {
+        return [...months].sort((a, b) => {
+          const yA = Number(a.year) || 0;
+          const yB = Number(b.year) || 0;
+          if (yA !== yB) return yA - yB;
+          const mA = MONTHS_LIST.indexOf(a.monthName);
+          const mB = MONTHS_LIST.indexOf(b.monthName);
+          return mA - mB;
+        });
+      }, [months]);
+
+      // Hitung Saldo Berjalan Dari Bulan-Bulan Sebelumnya
+      const calculateRolloverBalance = (targetMonthId) => {
+        let cumulative = 0;
+        for (const m of sortedMonths) {
+          if (m.id === targetMonthId) break;
+          const mTxs = allUserMonthsTx[m.id] || [];
+          mTxs.forEach(tx => {
+            const sum = tx.items && tx.items.length > 0 
+              ? tx.items.reduce((acc, item) => acc + Number(item.price || 0), 0)
+              : Number(tx.amount || 0);
+
+            if (tx.type === 'income') cumulative += sum;
+            if (tx.type === 'expense') cumulative -= sum;
+          });
+        }
+        return cumulative;
+      };
+
+      const calculateSummary = (txList, targetMonth) => {
         let pemasukanTotal = 0;
         let pengeluaranTotal = 0;
 
@@ -144,18 +269,30 @@
           else if (tx.type === 'expense') pengeluaranTotal += sum;
         });
 
-        const uangTersisa = pemasukanTotal - pengeluaranTotal;
-        const today = new Date().getDate();
-        const rataRataPengeluaran = today > 0 ? Math.round(pengeluaranTotal / today) : pengeluaranTotal;
+        const saldoAwal = targetMonth ? calculateRolloverBalance(targetMonth.id) : 0;
+        const uangTersisa = saldoAwal + pemasukanTotal - pengeluaranTotal;
 
-        return { pemasukanTotal, pengeluaranTotal, uangTersisa, rataRataPengeluaran };
+        // Hitung rata-rata pengeluaran berbasis hari dalam bulan terpilih
+        const now = new Date();
+        let daysDivisor = now.getDate();
+        if (targetMonth) {
+          const mIndex = MONTHS_LIST.indexOf(targetMonth.monthName);
+          const isCurrentMonth = targetMonth.year === now.getFullYear() && mIndex === now.getMonth();
+          if (!isCurrentMonth) {
+            daysDivisor = new Date(targetMonth.year || now.getFullYear(), mIndex + 1, 0).getDate();
+          }
+        }
+
+        const rataRataPengeluaran = daysDivisor > 0 ? Math.round(pengeluaranTotal / daysDivisor) : pengeluaranTotal;
+
+        return { saldoAwal, pemasukanTotal, pengeluaranTotal, uangTersisa, rataRataPengeluaran };
       };
 
-      const currentSummary = calculateSummary(transactions);
+      const currentSummary = calculateSummary(transactions, selectedMonth);
 
       const filteredUsers = users.filter(u => u.name?.toLowerCase().includes(searchUser.toLowerCase()));
       
-      const filteredMonths = months.filter(m => 
+      const filteredMonths = sortedMonths.filter(m => 
         m.monthName?.toLowerCase().includes(searchMonth.toLowerCase()) || 
         String(m.year).includes(searchMonth)
       );
@@ -187,6 +324,51 @@
         return matchNote || matchItems || matchDate;
       });
 
+      // KELOMPOKKAN TRANSAKSI PER HARI
+      const groupedDailyTransactions = useMemo(() => {
+        const groups = {};
+
+        filteredTransactions.forEach(tx => {
+          let dateObj = new Date();
+          if (tx.createdAt) {
+            dateObj = tx.createdAt.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt);
+          }
+          const dateKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+          const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+          const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+          const dayName = days[dateObj.getDay()];
+          const dateNum = dateObj.getDate();
+          const monthName = months[dateObj.getMonth()];
+
+          if (!groups[dateKey]) {
+            groups[dateKey] = {
+              dateKey,
+              dateObj,
+              dayName,
+              dateNum,
+              monthName,
+              formattedHeader: `${dayName}, ${dateNum} ${monthName}`,
+              transactions: [],
+              totalExpense: 0,
+              totalIncome: 0
+            };
+          }
+
+          groups[dateKey].transactions.push(tx);
+
+          const txSum = tx.items && tx.items.length > 0 
+            ? tx.items.reduce((acc, i) => acc + Number(i.price || 0), 0)
+            : Number(tx.amount || 0);
+
+          if (tx.type === 'expense') groups[dateKey].totalExpense += txSum;
+          if (tx.type === 'income') groups[dateKey].totalIncome += txSum;
+        });
+
+        return Object.values(groups).sort((a, b) => b.dateObj - a.dateObj);
+      }, [filteredTransactions]);
+
       return (
         <div className="max-w-md mx-auto px-4 pt-6 theme-transition">
           
@@ -194,10 +376,11 @@
           <div className={`flex justify-between items-center mb-6 p-2 pl-4 rounded-2xl border shadow-sm theme-transition ${
             isMinimal 
               ? 'bg-white text-zinc-900 border-zinc-200 shadow-zinc-900/10' 
-              : 'bg-white/60 backdrop-blur-md border-slate-200/60'
+              : 'bg-white/70 backdrop-blur-md border-rose-100/80 shadow-rose-100/50'
           }`}>
-            <span className="text-xs font-bold tracking-wide flex items-center gap-1.5">
-              {isMinimal ? '⚡ Clean Look (Putih)' : '💖 Romantis (Warna)'}
+            <span className="text-xs font-bold tracking-wide flex items-center gap-2">
+              <IconSparkles />
+              {isMinimal ? 'Clean Look (Minimal)' : 'Mode Warna Romantis'}
             </span>
             <button 
               onClick={toggleAppTheme}
@@ -207,18 +390,19 @@
                   : 'bg-slate-800 text-white shadow-md'
               }`}
             >
-              <span>{isMinimal ? '💖 Mode Warna' : '🤍 Mode Minimal Clean'}</span>
+              <IconLayout />
+              <span>{isMinimal ? 'Mode Warna' : 'Mode Minimal'}</span>
             </button>
           </div>
 
-          {/* HALAMAN 1 */}
+          {/* HALAMAN 1: DAFTAR PROFIL */}
           {page === 1 && (
             <div>
               <header className="mb-6 text-center">
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-2 theme-transition ${
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-2 theme-transition ${
                   isMinimal ? 'bg-white text-zinc-800 border border-zinc-200 shadow-sm' : 'bg-pink-100/80 text-pink-600'
                 }`}>
-                  <span>{isMinimal ? '📋' : '💖'}</span> Keuangan Pasangan
+                  <IconSparkles /> Keuangan Pasangan
                 </div>
                 <h1 className={`text-2xl font-extrabold tracking-tight ${isMinimal ? 'text-white' : 'text-slate-800'}`}>Atur Keuangan Bersama</h1>
                 <p className={`text-xs mt-1 ${isMinimal ? 'text-zinc-400' : 'text-slate-500'}`}>Pilih profil untuk mengelola pengeluaran real-time</p>
@@ -236,9 +420,7 @@
                       : 'bg-white border border-rose-100 text-slate-700 placeholder-slate-400 focus:border-pink-500'
                   }`}
                 />
-                <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <span className="absolute left-3 top-3 text-slate-400"><IconSearch /></span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -262,9 +444,7 @@
                       }`}
                       title="Edit Nama / Profil"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
+                      <IconEdit />
                     </button>
 
                     <div 
@@ -305,8 +485,9 @@
                     ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50 shadow-black/40' 
                     : 'bg-slate-900 text-white shadow-lg'
                 }`}
+                title="Tambah Profil Baru"
               >
-                +
+                <IconPlus />
               </button>
 
               {userModalOpen && (
@@ -333,7 +514,7 @@
             </div>
           )}
 
-          {/* HALAMAN 2 */}
+          {/* HALAMAN 2: PILIH BULAN */}
           {page === 2 && selectedUser && (
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -343,9 +524,7 @@
                     isMinimal ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-100' : 'bg-white border-rose-100 text-slate-600 hover:bg-rose-50'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <IconArrowLeft />
                 </button>
                 <div>
                   <h1 className={`text-xl font-extrabold ${isMinimal ? 'text-white' : 'text-slate-800'}`}>{selectedUser.name}</h1>
@@ -365,9 +544,7 @@
                       : 'bg-white border border-rose-100 text-slate-700 placeholder-slate-400 focus:border-pink-500'
                   }`}
                 />
-                <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <span className="absolute left-3 top-3 text-slate-400"><IconSearch /></span>
               </div>
 
               <div className="space-y-4">
@@ -379,44 +556,66 @@
                     themeColor={selectedUser.themeColor}
                     themeShadow={selectedUser.themeShadow}
                     userId={selectedUser.id}
+                    allUserMonthsTx={allUserMonthsTx}
+                    calculateRolloverBalance={calculateRolloverBalance}
                     onNavigate={() => {
                       setSelectedMonth(m);
                       setPage(3);
+                    }}
+                    onEditMonth={(monthDoc) => {
+                      setEditingMonth(monthDoc);
+                      setMonthModalOpen(true);
                     }}
                   />
                 ))}
               </div>
 
               <button 
-                onClick={() => setShowMonthModal(true)}
+                onClick={() => {
+                  setEditingMonth(null);
+                  setMonthModalOpen(true);
+                }}
                 className={`w-full mt-6 py-3.5 px-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:opacity-95 transition-all transform active:scale-98 theme-transition ${
                   isMinimal 
                     ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50 shadow-black/30' 
                     : `bg-gradient-to-r ${selectedUser.themeColor || 'from-pink-500 to-rose-500'} text-white ${selectedUser.themeShadow || 'shadow-pink-200'}`
                 }`}
               >
-                <span>+ Tambah Bulan</span>
+                <IconPlus />
+                <span>Tambah Bulan</span>
               </button>
 
-              {showMonthModal && (
+              {monthModalOpen && (
                 <MonthModal 
                   isMinimal={isMinimal}
+                  initialData={editingMonth}
                   themeColor={selectedUser.themeColor}
-                  onClose={() => setShowMonthModal(false)}
-                  onSave={async (monthName) => {
-                    await db.collection('users').doc(selectedUser.id).collection('months').add({
-                      monthName,
-                      year: new Date().getFullYear(),
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    setShowMonthModal(false);
+                  onClose={() => setMonthModalOpen(false)}
+                  onSave={async (monthData) => {
+                    if (editingMonth) {
+                      await db.collection('users').doc(selectedUser.id)
+                        .collection('months').doc(editingMonth.id).update(monthData);
+                    } else {
+                      await db.collection('users').doc(selectedUser.id).collection('months').add({
+                        ...monthData,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                      });
+                    }
+                    setMonthModalOpen(false);
+                  }}
+                  onDelete={async () => {
+                    if (editingMonth) {
+                      await db.collection('users').doc(selectedUser.id)
+                        .collection('months').doc(editingMonth.id).delete();
+                      setMonthModalOpen(false);
+                    }
                   }}
                 />
               )}
             </div>
           )}
 
-          {/* HALAMAN 3 */}
+          {/* HALAMAN 3: LAPORAN KEUANGAN DETAIL & RIWAYAT HARIAN */}
           {page === 3 && selectedUser && selectedMonth && (
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -426,20 +625,19 @@
                     isMinimal ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-100' : 'bg-white border-rose-100 text-slate-600 hover:bg-rose-50'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <IconArrowLeft />
                 </button>
                 <div>
-                  <span className={`text-xs font-bold px-3.5 py-1.5 rounded-full border shadow-sm theme-transition ${
+                  <span className={`text-xs font-bold px-3.5 py-1.5 rounded-full border shadow-sm flex items-center gap-1.5 theme-transition ${
                     isMinimal ? 'bg-white text-zinc-900 border-zinc-200' : 'text-slate-800 bg-white border-slate-200'
                   }`}>
+                    <IconCalendar />
                     {selectedMonth.monthName} {selectedMonth.year}
                   </span>
                 </div>
               </div>
 
-              {/* Header Saldo */}
+              {/* Header Saldo Ringkasan */}
               <div className={`rounded-2xl p-5 mb-5 shadow-sm border theme-transition ${
                 isMinimal ? 'bg-white border-zinc-200 text-zinc-900 shadow-xl' : 'bg-white border-rose-100 text-slate-800'
               }`}>
@@ -447,10 +645,10 @@
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-inner shrink-0 mt-0.5 ${
                     isMinimal ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-emerald-100 text-emerald-600'
                   }`}>
-                    💵
+                    <IconWallet />
                   </div>
                   <div className="w-full overflow-hidden">
-                    <p className={`text-xs font-semibold ${isMinimal ? 'text-zinc-500' : 'text-slate-400'}`}>Sisa Saldo</p>
+                    <p className={`text-xs font-semibold ${isMinimal ? 'text-zinc-500' : 'text-slate-400'}`}>Sisa Saldo Total</p>
                     <p className="text-2xl font-black tracking-tight break-all mt-0.5">
                       {formatIDR(currentSummary.uangTersisa)}
                     </p>
@@ -458,23 +656,23 @@
                     <div className="flex items-center gap-2 mt-4">
                       <button 
                         onClick={() => setTxModalType('income')}
-                        className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all shadow-sm text-center transform active:scale-95 flex items-center justify-center gap-1 ${
+                        className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all shadow-sm text-center transform active:scale-95 flex items-center justify-center gap-1.5 ${
                           isMinimal 
                             ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' 
                             : 'bg-emerald-500 hover:bg-emerald-600 text-white'
                         }`}
                       >
-                        <span>+</span> Masuk
+                        <IconPlus /> Masuk
                       </button>
                       <button 
                         onClick={() => setTxModalType('expense')}
-                        className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all shadow-sm text-center transform active:scale-95 flex items-center justify-center gap-1 ${
+                        className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all shadow-sm text-center transform active:scale-95 flex items-center justify-center gap-1.5 ${
                           isMinimal 
                             ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' 
                             : 'bg-rose-500 hover:bg-rose-600 text-white'
                         }`}
                       >
-                        <span>-</span> Keluar
+                        <IconMinus /> Keluar
                       </button>
                     </div>
                   </div>
@@ -482,8 +680,8 @@
 
                 <div className={`mt-4 pt-4 border-t grid grid-cols-2 gap-2.5 text-xs ${isMinimal ? 'border-zinc-200' : 'border-slate-100'}`}>
                   <div className={`p-2.5 rounded-xl border ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-rose-50/50 border-rose-100/60'}`}>
-                    <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Sisa Bulan Ini</p>
-                    <p className="font-extrabold mt-0.5 text-emerald-600">{formatIDR(currentSummary.uangTersisa)}</p>
+                    <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Saldo Awal (Bulan Lalu)</p>
+                    <p className="font-extrabold mt-0.5 text-purple-600">{formatIDR(currentSummary.saldoAwal)}</p>
                   </div>
                   <div className={`p-2.5 rounded-xl border ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-rose-50/50 border-rose-100/60'}`}>
                     <p className={isMinimal ? 'text-zinc-500' : 'text-slate-400'}>Rata-rata / Hari</p>
@@ -504,7 +702,7 @@
               <div className="relative mb-4">
                 <input 
                   type="text" 
-                  placeholder="Cari hari, tanggal (misal: Senin/13), bulan, barang..." 
+                  placeholder="Cari hari, tanggal (misal: Senin/13), barang..." 
                   value={searchTx}
                   onChange={e => setSearchTx(e.target.value)}
                   className={`w-full rounded-xl py-2.5 pl-9 pr-4 text-xs focus:outline-none shadow-sm theme-transition ${
@@ -513,30 +711,31 @@
                       : 'bg-white border border-rose-100 text-slate-700 placeholder-slate-400 focus:border-pink-500'
                   }`}
                 />
-                <svg className="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <span className="absolute left-3 top-3 text-slate-400"><IconSearch /></span>
               </div>
 
-              {/* List Transaksi Vertikal */}
+              {/* LIST RIWAYAT HARIAN (KOLOM TERKELOMPOK PER HARI) */}
               <div className="space-y-3">
-                <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isMinimal ? 'text-zinc-400' : 'text-slate-400'}`}>Riwayat Laporan</h3>
-                {filteredTransactions.length === 0 ? (
+                <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center justify-between ${isMinimal ? 'text-zinc-400' : 'text-slate-400'}`}>
+                  <span>Riwayat Laporan Per Hari</span>
+                  <span>{groupedDailyTransactions.length} Hari</span>
+                </h3>
+
+                {groupedDailyTransactions.length === 0 ? (
                   <div className={`text-center py-10 rounded-2xl border p-6 theme-transition ${
                     isMinimal ? 'bg-white border-zinc-200 text-zinc-500 shadow-md' : 'bg-white border-rose-100 text-slate-500'
                   }`}>
-                    <span className="text-3xl">📝</span>
-                    <p className="font-medium text-xs mt-2">Tidak ada laporan transaksi yang cocok.</p>
+                    <p className="font-medium text-xs">Tidak ada laporan transaksi yang cocok.</p>
                   </div>
                 ) : (
-                  filteredTransactions.map((tx) => (
-                    <TransactionCard 
-                      key={tx.id} 
-                      tx={tx} 
+                  groupedDailyTransactions.map((group) => (
+                    <DailyGroupCard 
+                      key={group.dateKey}
+                      group={group}
                       isMinimal={isMinimal}
                       themeColor={selectedUser.themeColor}
                       themeShadow={selectedUser.themeShadow}
-                      onEdit={() => setEditingTx(tx)}
+                      onEditTx={(tx) => setEditingTx(tx)}
                     />
                   ))
                 )}
@@ -598,23 +797,18 @@
       );
     }
 
-    function MonthCard({ monthData, isMinimal, themeColor, themeShadow, userId, onNavigate }) {
+    // ==========================================
+    // KOMPONEN CARD BULAN
+    // ==========================================
+    function MonthCard({ monthData, isMinimal, themeColor, themeShadow, userId, allUserMonthsTx, calculateRolloverBalance, onNavigate, onEditMonth }) {
       const [isOpen, setIsOpen] = useState(false);
-      const [txs, setTxs] = useState([]);
 
-      useEffect(() => {
-        const unsub = db.collection('users').doc(userId)
-          .collection('months').doc(monthData.id)
-          .collection('transactions').onSnapshot((snap) => {
-            setTxs(snap.docs.map(d => d.data()));
-          });
-        return () => unsub();
-      }, [userId, monthData.id]);
+      const mTxs = allUserMonthsTx[monthData.id] || [];
 
       let pemasukanTotal = 0;
       let pengeluaranTotal = 0;
 
-      txs.forEach(tx => {
+      mTxs.forEach(tx => {
         const sum = tx.items && tx.items.length > 0 
           ? tx.items.reduce((acc, item) => acc + Number(item.price || 0), 0)
           : Number(tx.amount || 0);
@@ -623,9 +817,8 @@
         if (tx.type === 'expense') pengeluaranTotal += sum;
       });
 
-      const uangTersisa = pemasukanTotal - pengeluaranTotal;
-      const today = new Date().getDate();
-      const rataRataPengeluaran = today > 0 ? Math.round(pengeluaranTotal / today) : pengeluaranTotal;
+      const saldoAwal = calculateRolloverBalance(monthData.id);
+      const uangTersisa = saldoAwal + pemasukanTotal - pengeluaranTotal;
 
       return (
         <div className={`rounded-2xl p-4 relative transition-all theme-transition ${
@@ -635,6 +828,18 @@
         }`}>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold">{monthData.monthName} {monthData.year}</h3>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditMonth(monthData);
+              }}
+              className={`p-1.5 rounded-full transition-all ${
+                isMinimal ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200' : 'bg-white/20 hover:bg-white/40 text-white'
+              }`}
+              title="Edit / Hapus Bulan"
+            >
+              <IconEdit />
+            </button>
           </div>
           
           <div className={`w-full h-[1px] my-2 ${isMinimal ? 'bg-zinc-200' : 'bg-white/30'}`}></div>
@@ -643,10 +848,10 @@
             onClick={() => setIsOpen(!isOpen)}
             className={`text-xs font-semibold flex items-center gap-1 focus:outline-none ${isMinimal ? 'text-zinc-600 hover:text-zinc-900' : 'text-white/90 hover:underline'}`}
           >
-            <span>Rincian</span>
-            <svg className={`w-3.5 h-3.5 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
+            <span>Ringkasan Saldo</span>
+            <span className={isOpen ? 'rotate-180 transition-transform' : 'transition-transform'}>
+              <IconChevronDown />
+            </span>
           </button>
 
           {isOpen && (
@@ -656,20 +861,20 @@
                 : 'bg-black/10 border-white/20 text-white backdrop-blur-sm'
             }`}>
               <div className="flex justify-between">
-                <span>Uang Tersisa:</span>
-                <span className="font-bold">{formatIDR(uangTersisa)}</span>
+                <span>Saldo Awal:</span>
+                <span className="font-bold">{formatIDR(saldoAwal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Rata-rata/hari:</span>
-                <span className="font-bold">{formatIDR(rataRataPengeluaran)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total Pemasukan:</span>
+                <span>Pemasukan:</span>
                 <span className="font-bold">{formatIDR(pemasukanTotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Total Pengeluaran:</span>
+                <span>Pengeluaran:</span>
                 <span className="font-bold">{formatIDR(pengeluaranTotal)}</span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-white/20 font-extrabold">
+                <span>Sisa Akhir Saldo:</span>
+                <span>{formatIDR(uangTersisa)}</span>
               </div>
             </div>
           )}
@@ -690,100 +895,147 @@
       );
     }
 
-    function TransactionCard({ tx, isMinimal, themeColor, themeShadow, onEdit }) {
+    // ==========================================
+    // KOMPONEN GROUP KELOMPOK HARIAN (ACCORDION)
+    // ==========================================
+    function DailyGroupCard({ group, isMinimal, themeColor, themeShadow, onEditTx }) {
+      const [expanded, setExpanded] = useState(true);
+
+      return (
+        <div className={`rounded-2xl overflow-hidden border theme-transition transition-all ${
+          isMinimal 
+            ? 'bg-white border-zinc-200 text-zinc-900 shadow-md shadow-black/5' 
+            : `bg-gradient-to-r ${themeColor || 'from-pink-400 to-rose-500'} text-white shadow-md ${themeShadow || 'shadow-pink-200'}`
+        }`}>
+          {/* Header Hari (3 Kolom Ringkasan) */}
+          <div 
+            onClick={() => setExpanded(!expanded)}
+            className={`p-3.5 flex items-center justify-between cursor-pointer select-none transition-all ${
+              isMinimal ? 'hover:bg-zinc-50' : 'hover:bg-white/10'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className={`p-1.5 rounded-lg ${isMinimal ? 'bg-zinc-100 text-zinc-700' : 'bg-white/20 text-white'}`}>
+                <IconCalendar />
+              </span>
+              <div>
+                <h4 className="text-xs font-black tracking-wide uppercase">{group.formattedHeader}</h4>
+                <p className={`text-[10px] font-medium ${isMinimal ? 'text-zinc-500' : 'text-white/80'}`}>
+                  {group.transactions.length} transaksi
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                {group.totalExpense > 0 && (
+                  <p className="text-xs font-black">
+                    <span className="text-[10px] opacity-80 font-normal">Keluar: </span>
+                    {formatIDR(group.totalExpense)}
+                  </p>
+                )}
+                {group.totalIncome > 0 && (
+                  <p className="text-xs font-black text-emerald-300">
+                    <span className="text-[10px] opacity-80 font-normal text-white">Masuk: </span>
+                    +{formatIDR(group.totalIncome)}
+                  </p>
+                )}
+              </div>
+              <span className={`transform transition-transform ${expanded ? 'rotate-180' : ''}`}>
+                <IconChevronDown />
+              </span>
+            </div>
+          </div>
+
+          {/* Isi Transaksi Dalam Kolom Hari */}
+          {expanded && (
+            <div className={`p-3 space-y-2.5 border-t ${isMinimal ? 'bg-zinc-50 border-zinc-200' : 'bg-black/10 border-white/10'}`}>
+              {group.transactions.map(tx => (
+                <TransactionCard 
+                  key={tx.id} 
+                  tx={tx} 
+                  isMinimal={isMinimal}
+                  onEdit={() => onEditTx(tx)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ==========================================
+    // KOMPONEN KARTU TRANSAKSI INDIVIDUAL
+    // ==========================================
+    function TransactionCard({ tx, isMinimal, onEdit }) {
       const isIncome = tx.type === 'income';
 
       const totalAmount = tx.items && tx.items.length > 0 
         ? tx.items.reduce((acc, i) => acc + Number(i.price || 0), 0)
         : Number(tx.amount || 0);
 
-      // Mengambil Format Tanggal dan Hari (tanpa bulan & tahun)
-      let formattedDateDay = '';
-      if (tx.createdAt) {
-        const dateObj = tx.createdAt.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt);
-        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        const dayName = days[dateObj.getDay()];
-        const dateNum = dateObj.getDate();
-        formattedDateDay = `${dayName}, ${dateNum}`;
-      }
-
       return (
-        <div className={`rounded-2xl p-4 relative theme-transition ${
+        <div className={`rounded-xl p-3 relative theme-transition border ${
           isMinimal 
-            ? 'bg-white border border-zinc-200 text-zinc-900 shadow-md shadow-black/10' 
-            : `bg-gradient-to-r ${themeColor || 'from-pink-400 to-rose-500'} text-white shadow-md ${themeShadow || 'shadow-pink-200'}`
+            ? 'bg-white border-zinc-200 text-zinc-900 shadow-sm' 
+            : 'bg-white/15 border-white/20 text-white backdrop-blur-sm'
         }`}>
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              {isIncome ? (
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-inner ${
-                  isMinimal ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-white/20 text-white'
-                }`}>
-                  💵
-                </div>
-              ) : (
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-inner ${
-                  isMinimal ? 'bg-zinc-100 text-zinc-900 border border-zinc-200' : 'bg-white/20 text-white'
-                }`}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                  </svg>
-                </div>
-              )}
+            <div className="flex items-center gap-2.5">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-inner shrink-0 ${
+                isIncome 
+                  ? (isMinimal ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-400/30 text-emerald-200')
+                  : (isMinimal ? 'bg-rose-100 text-rose-700' : 'bg-rose-400/30 text-rose-200')
+              }`}>
+                {isIncome ? <IconPlus /> : <IconMinus />}
+              </div>
 
               <div>
-                {/* Tanggal dan Hari Di Atas Nominal Angka */}
-                {formattedDateDay && (
-                  <span className={`text-[10px] font-extrabold uppercase tracking-wider block mb-0.5 ${
-                    isMinimal ? 'text-zinc-500' : 'text-white/80'
-                  }`}>
-                    📅 {formattedDateDay}
-                  </span>
-                )}
-                <p className={`text-xs font-semibold ${isMinimal ? 'text-zinc-500' : 'text-white/90'}`}>
-                  {isIncome ? 'Pemasukan Sebesar' : 'Pengeluaran Sebesar'}
+                <p className={`text-[10px] font-bold ${isMinimal ? 'text-zinc-500' : 'text-white/80'}`}>
+                  {isIncome ? 'Pemasukan' : 'Pengeluaran'}
                 </p>
-                <p className="text-lg font-black tracking-tight">{formatIDR(totalAmount)}</p>
+                <p className="text-sm font-black tracking-tight">{formatIDR(totalAmount)}</p>
               </div>
             </div>
 
             <button 
               onClick={onEdit} 
-              className={`p-1.5 rounded-lg transition-all ${
-                isMinimal ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200' : 'bg-white/20 hover:bg-white/30 text-white'
+              className={`p-1 rounded-lg transition-all ${
+                isMinimal ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700' : 'bg-white/20 hover:bg-white/30 text-white'
               }`}
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
+              <IconEdit />
             </button>
           </div>
 
-          <div className={`mt-3 rounded-xl p-3 text-xs border theme-transition ${
+          <div className={`mt-2 rounded-lg p-2 text-xs border ${
             isMinimal 
               ? 'bg-zinc-50 border-zinc-200 text-zinc-800' 
-              : 'bg-black/15 border-white/10 text-white/95 backdrop-blur-sm'
+              : 'bg-black/15 border-white/10 text-white/95'
           }`}>
             {tx.items && tx.items.length > 0 ? (
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {tx.items.map((item, idx) => (
                   <li key={idx} className={`flex justify-between border-b pb-1 last:border-0 last:pb-0 ${isMinimal ? 'border-zinc-200' : 'border-white/10'}`}>
-                    <span>📌 {item.name || 'Sumber / Barang'}</span>
+                    <span>• {item.name || 'Barang / Sumber'}</span>
                     <span className="font-bold">{formatIDR(item.price)}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p>📌 <span className="italic">{tx.note || (isIncome ? 'Pemasukan' : 'Pengeluaran')}</span></p>
+              <p>• <span className="italic">{tx.note || (isIncome ? 'Pemasukan' : 'Pengeluaran')}</span></p>
             )}
             {tx.note && tx.items && tx.items.length > 0 && (
-              <p className={`mt-2 text-[11px] border-t pt-1 ${isMinimal ? 'border-zinc-200 text-zinc-500' : 'border-white/10 text-white/80'}`}>Catatan: {tx.note}</p>
+              <p className={`mt-1.5 text-[10px] border-t pt-1 ${isMinimal ? 'border-zinc-200 text-zinc-500' : 'border-white/10 text-white/80'}`}>Catatan: {tx.note}</p>
             )}
           </div>
         </div>
       );
     }
 
+    // ==========================================
+    // MODAL BUAT / EDIT PROFIL
+    // ==========================================
     function UserModal({ isMinimal, initialData, onClose, onSave, onDelete }) {
       const [name, setName] = useState(initialData?.name || '');
       const [emoji, setEmoji] = useState(initialData?.emoji || '💖');
@@ -815,17 +1067,18 @@
               />
             </div>
 
+            {/* CUSTOM EMOJI PICKER LEBIH BANYAK (GRID 6) */}
             <div>
-              <label className={`text-xs font-semibold block mb-1.5 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pilih Emoji</label>
-              <div className="grid grid-cols-6 gap-2">
-                {['💖', '🥰', '😎', '👑', '🌷', '🐱'].map(e => (
+              <label className={`text-xs font-semibold block mb-1.5 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pilih Custom Emoji</label>
+              <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto p-1">
+                {EMOJI_PICKER_OPTIONS.map(e => (
                   <button 
                     key={e} 
                     type="button" 
                     onClick={() => setEmoji(e)}
-                    className={`py-2 text-center text-xl rounded-xl border transition-all ${
+                    className={`py-1.5 text-center text-lg rounded-xl border transition-all ${
                       emoji === e 
-                        ? (isMinimal ? 'border-zinc-900 bg-zinc-100 scale-105' : 'border-slate-800 bg-slate-100 scale-105') 
+                        ? (isMinimal ? 'border-zinc-900 bg-zinc-100 scale-105 shadow-sm' : 'border-slate-800 bg-slate-100 scale-105 shadow-sm') 
                         : (isMinimal ? 'border-zinc-200 bg-white' : 'border-slate-200 bg-slate-50')
                     }`}
                   >
@@ -836,7 +1089,7 @@
             </div>
 
             <div>
-              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pilih Tema Kolom</label>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pilih Tema Warna Profil</label>
               <div className="grid grid-cols-2 gap-2">
                 {THEME_OPTIONS.map(t => (
                   <button 
@@ -885,15 +1138,19 @@
       );
     }
 
-    function MonthModal({ isMinimal, themeColor, onClose, onSave }) {
-      const [selectedMonth, setSelectedMonth] = useState(MONTHS_LIST[0]);
+    // ==========================================
+    // MODAL BUAT / EDIT BULAN
+    // ==========================================
+    function MonthModal({ isMinimal, initialData, themeColor, onClose, onSave, onDelete }) {
+      const [selectedMonth, setSelectedMonth] = useState(initialData?.monthName || MONTHS_LIST[0]);
+      const [year, setYear] = useState(initialData?.year || new Date().getFullYear());
 
       return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className={`rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl border theme-transition ${
             isMinimal ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white border-rose-100 text-slate-800'
           }`}>
-            <h3 className="text-lg font-extrabold">Pilih Bulan Keuangan</h3>
+            <h3 className="text-lg font-extrabold">{initialData ? 'Edit Bulan' : 'Tambah Bulan Keuangan'}</h3>
 
             <div>
               <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Nama Bulan</label>
@@ -912,26 +1169,48 @@
               </select>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button onClick={onClose} className={`px-4 py-2.5 rounded-xl text-xs font-bold ${isMinimal ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-slate-100 text-slate-600'}`}>Batal</button>
-              <button 
-                onClick={() => onSave(selectedMonth)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold shadow-md ${
-                  isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' : `bg-gradient-to-r ${themeColor || 'from-slate-700 to-slate-900'} text-white`
+            <div>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Tahun</label>
+              <input 
+                type="number" 
+                value={year}
+                onChange={e => setYear(Number(e.target.value))}
+                className={`w-full rounded-xl p-3 text-sm focus:outline-none theme-transition ${
+                  isMinimal ? 'bg-white border border-zinc-300 text-zinc-900' : 'bg-slate-50 border border-slate-200 text-slate-800'
                 }`}
-              >
-                Simpan
-              </button>
+              />
+            </div>
+
+            <div className={`flex justify-between items-center pt-3 border-t ${isMinimal ? 'border-zinc-200' : 'border-slate-100'}`}>
+              {initialData && onDelete ? (
+                <button type="button" onClick={onDelete} className="text-xs font-bold text-rose-500 hover:underline">
+                  Hapus Bulan
+                </button>
+              ) : <div></div>}
+
+              <div className="flex gap-2">
+                <button onClick={onClose} className={`px-4 py-2.5 rounded-xl text-xs font-bold ${isMinimal ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-slate-100 text-slate-600'}`}>Batal</button>
+                <button 
+                  onClick={() => onSave({ monthName: selectedMonth, year })}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold shadow-md ${
+                    isMinimal ? 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50' : `bg-gradient-to-r ${themeColor || 'from-slate-700 to-slate-900'} text-white`
+                  }`}
+                >
+                  Simpan
+                </button>
+              </div>
             </div>
           </div>
         </div>
       );
     }
 
+    // ==========================================
+    // MODAL BUAT / EDIT TRANSAKSI
+    // ==========================================
     function TransactionModal({ type, initialData, isMinimal, themeColor, onClose, onSave, onDelete }) {
       const isIncome = type === 'income';
 
-      // Mengeset default tanggal ke Hari Ini (YYYY-MM-DD) atau dari data lama saat Edit
       const [dateStr, setDateStr] = useState(() => {
         if (initialData?.createdAt) {
           const d = initialData.createdAt.toDate ? initialData.createdAt.toDate() : new Date(initialData.createdAt);
@@ -993,14 +1272,13 @@
           <div className={`rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto border theme-transition ${
             isMinimal ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white border-rose-100 text-slate-800'
           }`}>
-            <h3 className="text-lg font-extrabold">
+            <h3 className="text-lg font-extrabold flex items-center gap-2">
               {initialData ? 'Edit' : 'Tambah'} {isIncome ? 'Pemasukan' : 'Pengeluaran'}
             </h3>
 
-            {/* Pemilih Tanggal Transaksi */}
             <div>
-              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>
-                📅 Tanggal Transaksi
+              <label className={`text-xs font-semibold block mb-1 flex items-center gap-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>
+                <IconCalendar /> Tanggal Transaksi
               </label>
               <input 
                 type="date" 
@@ -1014,14 +1292,14 @@
 
             <div className="space-y-2.5">
               <label className={`text-xs font-semibold block ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>
-                {isIncome ? 'Sumber Pemasukan (Bisa Banyak Orang/Sumber)' : 'Daftar Barang / Pengeluaran'}
+                {isIncome ? 'Sumber Pemasukan' : 'Daftar Barang / Pengeluaran'}
               </label>
 
               {items.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-1.5">
                   <input 
                     type="text" 
-                    placeholder={isIncome ? "Misal: Mama / Gaji" : "Misal: Makan"}
+                    placeholder={isIncome ? "Misal: Gaji" : "Misal: Makan"}
                     value={item.name} 
                     onChange={e => handleItemChange(idx, 'name', e.target.value)}
                     className={`w-1/2 rounded-xl p-2.5 text-xs focus:outline-none theme-transition ${
@@ -1066,12 +1344,12 @@
                   isMinimal ? 'text-zinc-800' : 'text-slate-700'
                 }`}
               >
-                + Tambah {isIncome ? 'Sumber Lain' : 'Barang Lagi'}
+                <IconPlus /> Tambah {isIncome ? 'Sumber Lain' : 'Barang Lagi'}
               </button>
             </div>
 
             <div>
-              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Pin Catatan Tambahan</label>
+              <label className={`text-xs font-semibold block mb-1 ${isMinimal ? 'text-zinc-600' : 'text-slate-500'}`}>Catatan Tambahan</label>
               <input 
                 type="text" 
                 placeholder="Misal: Dikasih pas ulang tahun"
