@@ -1,30 +1,36 @@
 const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
-    let serviceAccount;
     try {
-        const envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
-        
-        // Membaca input (baik format JSON mentah atau Base64)
-        if (envVal.startsWith('{')) {
-            serviceAccount = JSON.parse(envVal);
+        const rawEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (!rawEnv) {
+            throw new Error("FIREBASE_SERVICE_ACCOUNT tidak ditemukan di Environment Variables.");
+        }
+
+        let serviceAccount;
+        if (rawEnv.trim().startsWith('{')) {
+            serviceAccount = JSON.parse(rawEnv);
         } else {
-            const raw = Buffer.from(envVal, 'base64').toString('utf8');
-            serviceAccount = JSON.parse(raw);
+            const decoded = Buffer.from(rawEnv, 'base64').toString('utf8');
+            serviceAccount = JSON.parse(decoded);
         }
 
-        // PERBAIKAN UTAMA: Mengubah literal '\n' menjadi karakter newline sebenarnya
-        if (serviceAccount && serviceAccount.private_key) {
-            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        // Memastikan private_key dibersihkan secara presisi
+        let privateKey = serviceAccount.private_key;
+        if (typeof privateKey === 'string') {
+            privateKey = privateKey.replace(/\\n/g, '\n');
         }
 
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: serviceAccount.project_id,
+                clientEmail: serviceAccount.client_email,
+                privateKey: privateKey
+            })
+        });
     } catch (e) {
-        console.error("Gagal memparsing FIREBASE_SERVICE_ACCOUNT:", e);
+        console.error("Gagal inisialisasi Firebase Admin:", e.message);
     }
-
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
 }
 
 exports.handler = async function(event, context) {
@@ -33,7 +39,7 @@ exports.handler = async function(event, context) {
     }
 
     try {
-        const { text } = JSON.parse(event.body);
+        const { text } = JSON.parse(event.body || '{}');
 
         const tokensSnapshot = await admin.firestore().collection('fcm_tokens').get();
         const tokens = [];
