@@ -4,12 +4,20 @@ if (!admin.apps.length) {
     let serviceAccount;
     try {
         const envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
+        
+        // Membaca input (baik format JSON mentah atau Base64)
         if (envVal.startsWith('{')) {
             serviceAccount = JSON.parse(envVal);
         } else {
             const raw = Buffer.from(envVal, 'base64').toString('utf8');
             serviceAccount = JSON.parse(raw);
         }
+
+        // PERBAIKAN UTAMA: Mengubah literal '\n' menjadi karakter newline sebenarnya
+        if (serviceAccount && serviceAccount.private_key) {
+            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        }
+
     } catch (e) {
         console.error("Gagal memparsing FIREBASE_SERVICE_ACCOUNT:", e);
     }
@@ -40,11 +48,9 @@ exports.handler = async function(event, context) {
             return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token.' }) };
         }
 
-        // Kirim ke tiap token secara independen
         const sendPromises = tokens.map(token => {
             return admin.messaging().send({
                 token: token,
-                // Masukkan detail ke objek notification & data
                 notification: {
                     title: "Pesan Baru dari Sayang! 💖",
                     body: text || "Ada pesan darurat baru untukmu."
