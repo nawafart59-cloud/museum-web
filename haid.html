@@ -10,20 +10,37 @@
     .theme-transition {
       transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
     }
+    
+    /* Scrollbar Halus untuk Modal */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
   </style>
 </head>
 
-<body id="appBody" class="theme-transition min-h-screen bg-rose-50/60 text-slate-800 font-sans pb-28">
+<body id="appBody" class="theme-transition min-h-screen bg-rose-50/50 text-slate-800 font-sans pb-28 antialiased">
 
   <!-- Header Modern, Glassmorphic & Integrated Search -->
-  <header class="sticky top-0 z-20 backdrop-blur-xl bg-white/80 border-b border-rose-100/60 shadow-sm transition-all duration-500" id="appHeader">
+  <header class="sticky top-0 z-20 backdrop-blur-xl bg-white/80 border-b border-rose-100/70 shadow-sm/50 transition-all duration-500" id="appHeader">
     <div class="max-w-md mx-auto px-4 pt-3.5 pb-3">
       
       <!-- Top Row: Logo & Theme Switcher -->
       <div class="flex justify-between items-center mb-2.5">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-lg shadow-md shadow-rose-200 text-white transition-transform hover:scale-105" id="logoBox">
-            <span id="titleIcon">🌸</span>
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-rose-400 flex items-center justify-center shadow-md shadow-rose-200/60 text-white transition-transform hover:scale-105" id="logoBox">
+            <span id="titleIcon">
+              <!-- Default Heart Vector Logo -->
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </span>
           </div>
           <div>
             <h1 class="text-base font-black tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 bg-clip-text text-transparent" id="appTitle">
@@ -34,20 +51,25 @@
         </div>
         
         <!-- Button Switch Mode -->
-        <button id="themeToggleBtn" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-200/80 bg-white/90 hover:bg-rose-50 hover:border-rose-300 transition-all duration-300 flex items-center gap-1.5 shadow-sm active:scale-95">
-          <span id="themeIcon">✨</span> <span id="themeText">Minimalis</span>
+        <button id="themeToggleBtn" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-200/80 bg-white/90 hover:bg-rose-50 hover:border-rose-300 transition-all duration-300 flex items-center gap-1.5 shadow-sm active:scale-95 text-slate-700">
+          <span id="themeIcon" class="flex items-center">
+            <svg class="w-3.5 h-3.5 text-rose-500 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </span> 
+          <span id="themeText">Minimalis</span>
         </button>
       </div>
 
       <!-- Fitur Pencarian / Search Bar -->
       <div class="relative">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-rose-400">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
         </div>
         <input type="text" id="searchInput" placeholder="Cari bulan, gejala, atau tanggal..." 
-          class="w-full pl-8 pr-8 py-1.5 bg-slate-100/80 focus:bg-white border border-transparent focus:border-rose-300 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200 transition-all shadow-inner">
+          class="w-full pl-8 pr-8 py-1.5 bg-slate-100/70 focus:bg-white border border-transparent focus:border-rose-300 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-200/50 transition-all shadow-inner">
         
         <!-- Tombol Clear Search (X) -->
         <button id="clearSearchBtn" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 hidden">
@@ -69,16 +91,22 @@
   <main class="max-w-md mx-auto px-4 mt-3.5">
     <div id="riwayatList" class="flex flex-col gap-3">
       <!-- Loading state -->
-      <div class="text-center py-12 text-sm text-slate-400 animate-pulse">
-        Memuat data siklus Simerah... ✨
+      <div class="text-center py-12 text-sm text-slate-400 animate-pulse flex flex-col items-center justify-center gap-2">
+        <svg class="w-6 h-6 animate-spin text-rose-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Memuat data siklus Simerah...</span>
       </div>
     </div>
   </main>
 
-  <!-- Floating Action Button (Tombol Pink + di Tengah Bawah) -->
+  <!-- Floating Action Button (Tombol Vector Plus) -->
   <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
-    <button id="openModalBtn" class="w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg hover:shadow-rose-300/50 flex items-center justify-center text-3xl font-light transition-all duration-300 hover:scale-110 active:scale-95">
-      +
+    <button id="openModalBtn" aria-label="Tambah Data" class="w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg shadow-rose-300/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95">
+      <svg class="w-6 h-6 stroke-current" fill="none" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
     </button>
   </div>
 
@@ -87,10 +115,14 @@
     <div class="bg-white rounded-3xl p-5 w-full max-w-xs shadow-2xl border border-rose-100 transition-all transform scale-95 opacity-0" id="modalBox">
       
       <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5" id="modalTitle">
-          <span>💖</span> Kalender Siklus Simerah
+        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2" id="modalTitle">
+          <!-- Filled via JS -->
         </h3>
-        <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 p-1 rounded-full transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
 
       <form id="haidForm" class="space-y-3">
@@ -100,8 +132,11 @@
         <div class="space-y-2">
           <div class="flex justify-between items-center">
             <label class="block text-xs font-semibold text-slate-600">Siklus Haid Bulan Ini</label>
-            <button type="button" id="addSiklusBtn" class="text-[11px] font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg border border-rose-200 transition flex items-center gap-1 active:scale-95">
-              <span>+</span> Tambah Siklus
+            <button type="button" id="addSiklusBtn" class="text-[11px] font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-xl border border-rose-200 transition flex items-center gap-1 active:scale-95">
+              <svg class="w-3 h-3 stroke-current" fill="none" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span>Tambah Siklus</span>
             </button>
           </div>
 
@@ -112,23 +147,28 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan Gejala / Perasaan</label>
-          <textarea id="inputCatatan" rows="2" placeholder="Apa yang kamu rasain bulan ini sayang? (Kram, pusing, mood swing, dll)..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+          <textarea id="inputCatatan" rows="2" placeholder="Apa yang kamu rasain bulan ini sayang? (Kram, pusing, mood swing, dll)..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-400 transition-all"></textarea>
         </div>
 
         <div class="pt-2 flex flex-col gap-2">
           <div class="flex gap-2">
-            <button type="button" id="cancelBtn" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-xl text-xs transition">
+            <button type="button" id="cancelBtn" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 rounded-xl text-xs transition">
               Batal
             </button>
-            <button type="submit" id="submitBtn" class="w-1/2 bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 rounded-xl text-xs transition shadow-md shadow-rose-200">
-              Simpan Data
+            <button type="submit" id="submitBtn" class="w-1/2 bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-xs transition shadow-md shadow-rose-200/50 flex items-center justify-center gap-1">
+              <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+              </svg>
+              <span>Simpan</span>
             </button>
           </div>
           
           <!-- Tombol Hapus (Hanya muncul saat Edit) -->
-          <button type="button" id="deleteBtn" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-medium py-2 rounded-xl text-xs transition hidden flex items-center justify-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            Hapus Catatan Ini
+          <button type="button" id="deleteBtn" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 rounded-xl text-xs transition hidden flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+            </svg>
+            <span>Hapus Catatan Ini</span>
           </button>
         </div>
       </form>
@@ -181,7 +221,16 @@
     const addSiklusBtn = document.getElementById('addSiklusBtn');
     const siklusInputsContainer = document.getElementById('siklusInputsContainer');
 
-    // Vector Drop SVG Helper
+    // Vector SVG Icons Helper
+    const SVG_ICONS = {
+      heart: `<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+      minimalist: `<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>`,
+      sparkle: `<svg class="w-3.5 h-3.5 text-rose-500 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>`,
+      edit: `<svg class="w-4 h-4 text-rose-500 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`,
+      clock: `<svg class="w-3 h-3 inline-block mr-0.5 opacity-80 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+      alert: `<svg class="w-3.5 h-3.5 text-rose-600 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>`
+    };
+
     function getDropSvg(colorHex = "#ffffff") {
       return `<svg class="w-3.5 h-3.5 inline-block" viewBox="0 0 24 24" fill="${colorHex}">
         <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
@@ -191,12 +240,16 @@
     // Dynamic Row Generator untuk Input Modal
     function createSiklusRow(startVal = '', endVal = '', index = 0) {
       const rowDiv = document.createElement('div');
-      rowDiv.className = "siklus-row bg-slate-50 p-2.5 rounded-xl border border-slate-200 relative space-y-1.5";
+      rowDiv.className = "siklus-row bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 relative space-y-1.5 transition-all hover:border-rose-200";
       
       rowDiv.innerHTML = `
         <div class="flex justify-between items-center mb-0.5">
           <span class="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Siklus #${index + 1}</span>
-          ${index > 0 ? `<button type="button" class="remove-siklus-btn text-xs text-red-400 hover:text-red-600 font-bold px-1">&times; Hapus</button>` : ''}
+          ${index > 0 ? `
+            <button type="button" class="remove-siklus-btn text-[11px] text-red-500 hover:text-red-700 font-semibold flex items-center gap-0.5 px-1 rounded transition">
+              <svg class="w-3 h-3 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              Hapus
+            </button>` : ''}
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -243,27 +296,27 @@
 
     function applyTheme() {
       if (currentTheme === 'minimalist') {
-        body.className = "theme-transition min-h-screen bg-slate-50 text-slate-900 font-sans pb-28";
+        body.className = "theme-transition min-h-screen bg-slate-50 text-slate-900 font-sans pb-28 antialiased";
         header.className = "sticky top-0 z-20 backdrop-blur-xl bg-white/90 border-b border-slate-200 shadow-sm transition-colors duration-500";
-        logoBox.className = "w-9 h-9 rounded-2xl bg-slate-900 flex items-center justify-center text-lg shadow-md shadow-slate-200 text-white transition-transform hover:scale-105";
+        logoBox.className = "w-9 h-9 rounded-2xl bg-slate-900 flex items-center justify-center shadow-md shadow-slate-200 text-white transition-transform hover:scale-105";
         appTitle.className = "text-base font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent";
         appSubtitle.className = "text-[10px] text-slate-500 font-medium -mt-0.5";
         
-        document.getElementById('titleIcon').innerText = '🖤';
-        document.getElementById('themeIcon').innerText = '🌸';
+        document.getElementById('titleIcon').innerHTML = SVG_ICONS.minimalist;
+        document.getElementById('themeIcon').innerHTML = SVG_ICONS.heart;
         document.getElementById('themeText').innerText = 'Romantis';
-        openModalBtn.className = "w-14 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-light transition-all duration-300 hover:scale-110 active:scale-95";
+        openModalBtn.className = "w-14 h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95";
       } else {
-        body.className = "theme-transition min-h-screen bg-rose-50/60 text-slate-800 font-sans pb-28";
-        header.className = "sticky top-0 z-20 backdrop-blur-xl bg-white/80 border-b border-rose-100/60 shadow-sm transition-colors duration-500";
-        logoBox.className = "w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-lg shadow-md shadow-rose-200 text-white transition-transform hover:scale-105";
+        body.className = "theme-transition min-h-screen bg-rose-50/50 text-slate-800 font-sans pb-28 antialiased";
+        header.className = "sticky top-0 z-20 backdrop-blur-xl bg-white/80 border-b border-rose-100/70 shadow-sm/50 transition-colors duration-500";
+        logoBox.className = "w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-rose-400 flex items-center justify-center shadow-md shadow-rose-200/60 text-white transition-transform hover:scale-105";
         appTitle.className = "text-base font-black tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 bg-clip-text text-transparent";
         appSubtitle.className = "text-[10px] text-slate-400 font-medium -mt-0.5";
 
-        document.getElementById('titleIcon').innerText = '🌸';
-        document.getElementById('themeIcon').innerText = '✨';
+        document.getElementById('titleIcon').innerHTML = SVG_ICONS.heart;
+        document.getElementById('themeIcon').innerHTML = SVG_ICONS.sparkle;
         document.getElementById('themeText').innerText = 'Minimalis';
-        openModalBtn.className = "w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg hover:shadow-rose-300/50 flex items-center justify-center text-3xl font-light transition-all duration-300 hover:scale-110 active:scale-95";
+        openModalBtn.className = "w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-full shadow-lg shadow-rose-300/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95";
       }
     }
 
@@ -292,7 +345,7 @@
       if (data) {
         document.getElementById('editDocId').value = data.id;
         document.getElementById('inputCatatan').value = data.catatan || '';
-        document.getElementById('modalTitle').innerText = 'Edit Siklus ✏️';
+        document.getElementById('modalTitle').innerHTML = `${SVG_ICONS.edit} <span>Edit Siklus</span>`;
         deleteBtn.classList.remove('hidden');
 
         const list = getNormalizedSiklusList(data);
@@ -302,7 +355,7 @@
       } else {
         haidForm.reset();
         document.getElementById('editDocId').value = '';
-        document.getElementById('modalTitle').innerText = 'Catat Siklus Haid 💖';
+        document.getElementById('modalTitle').innerHTML = `${SVG_ICONS.heart} <span>Catat Siklus Haid</span>`;
         deleteBtn.classList.add('hidden');
         siklusInputsContainer.appendChild(createSiklusRow('', '', 0));
       }
@@ -517,17 +570,17 @@
 
       let countdownBadge = '';
       if (diffDays > 0) {
-        countdownBadge = `<span class="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-full">⏳ ~${diffDays} Hari Lagi</span>`;
+        countdownBadge = `<span class="text-[10px] font-bold bg-rose-500 text-white px-2.5 py-0.5 rounded-full shadow-xs">~${diffDays} Hari Lagi</span>`;
       } else if (diffDays === 0) {
-        countdownBadge = `<span class="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full animate-bounce">⚠️ Diperkirakan Hari Ini</span>`;
+        countdownBadge = `<span class="text-[10px] font-bold bg-amber-500 text-white px-2.5 py-0.5 rounded-full animate-bounce">Diperkirakan Hari Ini</span>`;
       } else {
-        countdownBadge = `<span class="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">⚡ Terlewat ${Math.abs(diffDays)} Hari</span>`;
+        countdownBadge = `<span class="text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full">Terlewat ${Math.abs(diffDays)} Hari</span>`;
       }
 
       predictionBanner.innerHTML = `
         <div class="flex justify-between items-start mb-1">
           <div class="flex items-center gap-1.5">
-            <span class="text-xs">🚨</span>
+            ${SVG_ICONS.alert}
             <span class="text-[11px] font-extrabold text-rose-700 tracking-wide uppercase">Prediksi Haid Bulan Depan</span>
           </div>
           ${countdownBadge}
@@ -580,17 +633,21 @@
       if (filteredDocs.length === 0) {
         if (searchQuery) {
           riwayatList.innerHTML = `
-            <div class="text-center py-12 text-slate-400">
-              <p class="text-3xl mb-2">🔍</p>
+            <div class="text-center py-12 text-slate-400 flex flex-col items-center justify-center">
+              <svg class="w-10 h-10 text-slate-300 mb-2 stroke-current" fill="none" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+              </svg>
               <p class="text-xs font-semibold text-slate-600">Hasil tidak ditemukan</p>
-              <p class="text-[10px] mt-1 text-slate-400">Tidak ada riwayat yang cocok dengan "${searchQuery}".</p>
+              <p class="text-[10px] mt-0.5 text-slate-400">Tidak ada riwayat yang cocok dengan "${searchQuery}".</p>
             </div>`;
         } else {
           riwayatList.innerHTML = `
-            <div class="text-center py-16 text-slate-400">
-              <p class="text-3xl mb-2">💌</p>
-              <p class="text-xs font-medium">Belum ada riwayat haid.</p>
-              <p class="text-[10px] mt-1 text-slate-400">Klik tombol + untuk mulai mencatat.</p>
+            <div class="text-center py-16 text-slate-400 flex flex-col items-center justify-center">
+              <svg class="w-10 h-10 text-rose-300 mb-2 fill-current" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <p class="text-xs font-medium text-slate-600">Belum ada riwayat haid.</p>
+              <p class="text-[10px] mt-0.5 text-slate-400">Klik tombol + di bawah untuk mulai mencatat.</p>
             </div>`;
         }
         return;
@@ -601,42 +658,42 @@
         const durasi = hitungDurasiTotal(siklusList);
         const isBelumSelesai = siklusList.some(s => !s.tanggalSelesai);
 
-        // Default: Normal (<= 5 Hari) - Warna Putih
-        let cardBgClass = "bg-white text-slate-800 border-rose-100 shadow-sm";
+        // Default: Normal (<= 5 Hari) - Warna Putih Soft
+        let cardBgClass = "bg-white text-slate-800 border-rose-100/80 shadow-sm";
         let circleClass = "bg-rose-500 font-bold shadow-sm";
         let circleTextClass = "text-white";
-        let dotsClass = "text-rose-400 font-bold";
+        let dotsClass = "text-rose-300 font-bold";
         let monthTextClass = "text-slate-800";
         let noteBgClass = "bg-slate-50 text-slate-600 border border-slate-100";
         let badgeBg = "bg-rose-100 text-rose-600";
         let dropColor = "#ffffff";
 
         if (durasi > 10) {
-          // > 10 HARI: Merah
+          // > 10 HARI: Merah Elegance
           cardBgClass = "bg-red-600 text-white border-red-500 shadow-md";
           circleClass = "bg-white font-bold shadow-sm";
           circleTextClass = "text-red-600";
-          dotsClass = "text-white font-bold";
+          dotsClass = "text-white/80 font-bold";
           monthTextClass = "text-white font-extrabold";
           noteBgClass = "bg-red-700/50 text-white placeholder-red-200 border border-red-400/30";
-          badgeBg = "bg-red-800 text-white";
+          badgeBg = "bg-red-800/80 text-white";
           dropColor = "#dc2626";
         } else if (durasi > 5) {
-          // > 5 HARI (6-10 hari): Orange
-          cardBgClass = "bg-orange-500 text-white border-orange-400 shadow-md";
+          // > 5 HARI (6-10 hari): Orange Soft
+          cardBgClass = "bg-amber-500 text-white border-amber-400 shadow-md";
           circleClass = "bg-white font-bold shadow-sm";
-          circleTextClass = "text-orange-600";
-          dotsClass = "text-white font-bold";
+          circleTextClass = "text-amber-600";
+          dotsClass = "text-white/80 font-bold";
           monthTextClass = "text-white font-extrabold";
-          noteBgClass = "bg-orange-600/50 text-white placeholder-orange-200 border border-orange-400/30";
-          badgeBg = "bg-orange-700 text-white";
-          dropColor = "#ea580c";
+          noteBgClass = "bg-amber-600/50 text-white placeholder-amber-200 border border-amber-400/30";
+          badgeBg = "bg-amber-700/80 text-white";
+          dropColor = "#d97706";
         } else if (currentTheme === 'minimalist') {
           // Normal Minimalist Mode
           cardBgClass = "bg-white text-slate-900 border-slate-200 shadow-sm";
           circleClass = "bg-slate-900 font-bold shadow-sm";
           circleTextClass = "text-white";
-          dotsClass = "text-slate-400 font-bold";
+          dotsClass = "text-slate-300 font-bold";
           monthTextClass = "text-slate-900";
           noteBgClass = "bg-slate-50 text-slate-700 border border-slate-200";
           badgeBg = "bg-slate-100 text-slate-700";
@@ -651,12 +708,12 @@
         let statusTeksHtml = '';
 
         if (!isBelumSelesai && lastSiklusItem.tanggalSelesai) {
-          // Ketika haid sudah selesai -> tampilkan Selesai (Tanggal Selesai)
+          // Ketika haid sudah selesai
           const tglSelesaiFormatted = formatTanggalSingkat(lastSiklusItem.tanggalSelesai);
-          statusTeksHtml = `⏱️ Status: <span class="font-bold">Selesai (${tglSelesaiFormatted})</span>`;
+          statusTeksHtml = `${SVG_ICONS.clock} Status: <span class="font-bold">Selesai (${tglSelesaiFormatted})</span>`;
         } else {
-          // Ketika haid masih berlangsung -> tampilkan estimasi prediksi selesai
-          statusTeksHtml = `⏱️ Prediksi Haid Selesai: <span class="font-bold underline decoration-rose-300">${prediksiStr}</span>`;
+          // Ketika haid masih berlangsung
+          statusTeksHtml = `${SVG_ICONS.clock} Prediksi Selesai: <span class="font-bold underline decoration-rose-300">${prediksiStr}</span>`;
         }
 
         // Generate Timeline Circles (Satu Kolom)
@@ -749,10 +806,10 @@
             <div class="flex justify-between items-center mb-1">
               <h2 class="text-xs font-bold tracking-wide ${monthTextClass}">${namaBulan}</h2>
               <div class="flex items-center gap-1.5">
-                <span class="text-[10px] px-2 py-0.5 rounded-full ${badgeBg} font-semibold shrink-0">
+                <span class="text-[10px] px-2.5 py-0.5 rounded-full ${badgeBg} font-semibold shrink-0">
                   ${isBelumSelesai ? `Hari Ke-${durasi}` : `${durasi} Hari`}
                 </span>
-                <button class="delete-card-btn opacity-60 hover:opacity-100 hover:text-red-500 transition p-1" title="Hapus Catatan">
+                <button class="delete-card-btn opacity-60 hover:opacity-100 hover:text-red-500 transition p-1 rounded-md" title="Hapus Catatan">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
               </div>
@@ -762,7 +819,7 @@
             ${timelineHtml}
 
             <!-- Status / Prediksi Selesai Haid -->
-            <div class="text-[10px] opacity-90 text-center font-medium my-1">
+            <div class="text-[10px] opacity-90 text-center font-medium my-1 flex items-center justify-center gap-1">
               ${statusTeksHtml}
             </div>
           </div>
