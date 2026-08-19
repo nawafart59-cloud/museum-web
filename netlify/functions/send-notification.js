@@ -3,7 +3,14 @@ const admin = require('firebase-admin');
 if (!admin.apps.length) {
     let serviceAccount;
     try {
-        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        // Mendukung format JSON biasa maupun Base64
+        const envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (envVal.startsWith('{')) {
+            serviceAccount = JSON.parse(envVal);
+        } else {
+            const raw = Buffer.from(envVal, 'base64').toString('utf8');
+            serviceAccount = JSON.parse(raw);
+        }
     } catch (e) {
         console.error("Gagal memparsing FIREBASE_SERVICE_ACCOUNT:", e);
     }
@@ -31,26 +38,29 @@ exports.handler = async function(event, context) {
         });
 
         if (tokens.length === 0) {
-            return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token.' }) };
+            return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token terdaftar.' }) };
         }
 
-        const message = {
-            notification: {
-                title: "Pesan Baru dari Sayang! 💖",
-                body: text || "Ada pesan darurat baru untukmu."
-            },
-            data: {
-                text: text || "",
-                url: "https://sign-of-love.netlify.app/"
-            },
-            tokens: tokens
-        };
+        // Mengirim pesan ke tiap token secara terpisah agar pasti masuk
+        const sendPromises = tokens.map(token => {
+            return admin.messaging().send({
+                token: token,
+                notification: {
+                    title: "Pesan Baru dari Sayang! 💖",
+                    body: text || "Ada pesan darurat baru untukmu."
+                },
+                data: {
+                    text: text || "",
+                    url: "https://sign-of-love.netlify.app/"
+                }
+            });
+        });
 
-        const response = await admin.messaging().sendEachForMulticast(message);
+        const results = await Promise.allSettled(sendPromises);
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ success: true, response: response })
+            body: JSON.stringify({ success: true, results: results })
         };
     } catch (error) {
         console.error('Error mengirim notifikasi:', error);
