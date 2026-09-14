@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Catatan Kita</title>
     
     <!-- Tailwind CSS CDN -->
@@ -15,7 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    <!-- DOMPurify (Pengaman dari serangan XSS/Script berbahaya) -->
+    <!-- DOMPurify -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 
     <style>
@@ -41,7 +41,6 @@
             font-family: 'Quicksand', sans-serif;
         }
 
-        /* STYLING JUDUL DI KOTAK SAMPUL */
         .note-card h3,
         .note-card .cover-title {
             font-size: 0.95rem !important;
@@ -49,7 +48,7 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
-        /* TEMA: BUKU TULIS / AESTHETIC JOURNAL */
+        /* TEMA JOURNAL / BUKU TULIS */
         body.theme-journal {
             background-color: #f7f3ed !important;
             color: #2d2a26 !important;
@@ -65,7 +64,7 @@
         }
         body.theme-journal #read-screen,
         body.theme-journal #form-screen {
-            background-color: #f7f3ed !important;
+            background-color: #fffdf9 !important;
         }
         
         body.theme-journal .notebook-paper {
@@ -74,11 +73,9 @@
                 linear-gradient(#e8e2d5 1px, transparent 1px),
                 linear-gradient(90deg, #f43f5e 2px, transparent 2px) !important;
             background-size: 100% 2.4rem, 100% 100% !important;
-            background-position: 0 0.6rem, 0.9rem 0 !important; 
+            background-position: 0 0.6rem, 1.2rem 0 !important; 
             padding-left: 2rem !important; 
             padding-right: 1.2rem !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
-            border-color: #e6dfd5 !important;
         }
 
         body.theme-journal .font-handwriting {
@@ -87,38 +84,15 @@
             line-height: 2.4rem !important;
             color: #1c1917;
         }
-        
-        body.theme-journal .bg-primary-btn {
-            background-color: #735745 !important;
-            color: #ffffff !important;
-            border: none !important;
-        }
 
-        /* TEMA: MODE SIMPLE ELEGANT */
+        /* TEMA ELEGANT */
         body.theme-elegant {
             background-color: #fafafa !important;
-            color: #18181b !important;
-        }
-        body.theme-elegant .bg-white {
-            background-color: #ffffff !important;
-            color: #18181b !important;
-        }
-        body.theme-elegant #header-card {
-            background-color: rgba(255, 255, 255, 0.85) !important;
-            border-color: #e4e4e7 !important;
-        }
-        body.theme-elegant #header-title {
-            background: none !important;
-            -webkit-text-fill-color: initial !important;
             color: #18181b !important;
         }
         body.theme-elegant #read-screen,
         body.theme-elegant #form-screen {
             background-color: #fafafa !important;
-        }
-        body.theme-elegant .bg-primary-btn {
-            background-color: #18181b !important;
-            color: #ffffff !important;
         }
 
         .gradient-swatch {
@@ -136,12 +110,58 @@
             box-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
         }
 
-        /* Style Foto di dalam editor/bacaan */
         .inline-photo-wrapper img {
             max-height: 320px;
             object-fit: contain;
             cursor: pointer;
         }
+
+        /* STIKER INTERAKTIF CONTAINER */
+        .interactive-sticker {
+            position: absolute;
+            z-index: 30;
+            user-select: none;
+            touch-action: none;
+            cursor: move;
+            display: inline-block;
+        }
+        .interactive-sticker img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+        }
+
+        /* HANDLE TRANSFORM (RESIZE, ROTATE, REMOVE) */
+        .sticker-controls {
+            position: absolute;
+            inset: -8px;
+            border: 1.5px dashed #f43f5e;
+            border-radius: 8px;
+            pointer-events: none;
+            display: none;
+        }
+        .interactive-sticker.active .sticker-controls {
+            display: block;
+        }
+        .sticker-handle {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background-color: #ffffff;
+            border: 2px solid #f43f5e;
+            border-radius: 50%;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .handle-delete { top: -10px; left: -10px; background-color: #ef4444; border-color: #ffffff; color: #ffffff; cursor: pointer; }
+        .handle-rotate { top: -10px; right: -10px; cursor: grab; color: #f43f5e; }
+        .handle-resize { bottom: -10px; right: -10px; cursor: nwse-resize; color: #f43f5e; }
     </style>
 </head>
 <body class="relative overflow-x-hidden pb-12">
@@ -184,17 +204,17 @@
     </div>
 
     <!-- LAYAR BACA FULLSCREEN -->
-    <div id="read-screen" class="fixed inset-0 bg-[#fff7f8] z-40 hidden flex-col px-4 sm:px-8 pt-4 pb-6 overflow-y-auto">
-        <div class="max-w-6xl mx-auto w-full flex-grow flex flex-col">
-            <div class="flex justify-between items-center mb-4 px-1">
+    <div id="read-screen" class="fixed inset-0 bg-[#fff7f8] z-40 hidden flex-col overflow-y-auto">
+        <div class="w-full flex-grow flex flex-col">
+            <!-- NAVIGASI HEADER LAYAR BACA -->
+            <div class="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 sm:px-8 py-3 border-b border-rose-100 flex justify-between items-center">
                 <button onclick="closeReadScreen()" class="bg-white text-rose-600 px-4 py-2 rounded-xl shadow-2xs font-semibold text-xs border border-rose-100 active:scale-95 transition flex items-center gap-2">
                     <svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                    <span>Kembali</span>
+                   
                 </button>
                 <div class="flex gap-2">
                     <button id="btn-edit" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl shadow-2xs font-semibold text-xs transition active:scale-95 flex items-center gap-1.5 bg-primary-btn">
                         <svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
-                        <span>Edit</span>
                     </button>
                     <button id="btn-delete" class="bg-red-100 hover:bg-red-200 text-red-600 px-3.5 py-2 rounded-xl font-semibold text-xs transition active:scale-95 flex items-center gap-1.5">
                         <svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
@@ -202,26 +222,31 @@
                 </div>
             </div>
 
-            <div id="read-paper-card" class="bg-white rounded-2xl p-5 sm:p-8 shadow-2xs border border-rose-100 flex-grow notebook-paper transition-all">
-                <div class="flex flex-wrap items-center gap-2 mb-4 border-b border-rose-100/60 pb-3">
-                    <span id="read-title" class="text-base font-bold text-gray-800"></span>
+            <!-- KERTAS BACA FULLSCREEN -->
+            <div id="read-paper-card" class="relative w-full min-h-screen px-4 sm:px-12 py-6 notebook-paper transition-all overflow-hidden flex-grow">
+                <div class="flex flex-wrap items-center gap-2 mb-4 border-b border-rose-100/60 pb-3 relative z-10">
+                    <span id="read-title" class="text-lg font-bold text-gray-800"></span>
                     <span id="read-author" class="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-100 px-2.5 py-0.5 rounded-lg"></span>
                     <span id="read-created-at" class="text-[11px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-0.5 rounded-lg ml-auto"></span>
                 </div>
                 
-                <div id="read-content" class="text-gray-900 leading-relaxed text-sm space-y-2 font-handwriting"></div>
+                <div id="read-paper-relative" class="relative w-full min-h-[400px]">
+                    <div id="read-content" class="text-gray-900 leading-relaxed text-base space-y-2 font-handwriting relative z-10 pb-20"></div>
+                    <!-- Layer tempat stiker dirender secara presisi -->
+                    <div id="read-stickers-layer" class="absolute inset-0 pointer-events-none z-20"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- LAYAR FORM TAMBAH / EDIT -->
-    <div id="form-screen" class="fixed inset-0 bg-[#fff7f8] z-40 hidden flex-col px-4 sm:px-8 pt-3 pb-4 overflow-y-auto">
-        <div class="max-w-6xl mx-auto w-full flex-grow flex flex-col relative">
+    <!-- LAYAR FORM EDIT / TAMBAH (FULLSCREEN) -->
+    <div id="form-screen" class="fixed inset-0 bg-[#fff7f8] z-40 hidden flex-col overflow-y-auto">
+        <div class="w-full flex-grow flex flex-col relative pb-36">
             
-            <form id="note-form" class="flex flex-col flex-grow gap-3">
+            <form id="note-form" class="flex flex-col flex-grow">
                 
-                <!-- STICKY HEADER NAVIGASI FORM -->
-                <div class="sticky top-0 z-30 bg-[#fff7f8]/95 backdrop-blur-md py-2.5 px-1 border-b border-rose-100 flex justify-between items-center gap-2">
+                <!-- STICKY HEADER FORM -->
+                <div class="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 sm:px-8 py-2.5 border-b border-rose-100 flex justify-between items-center gap-2 shadow-2xs">
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="closeForm()" title="Kembali" class="px-3 py-1.5 rounded-xl bg-white border border-rose-100 text-gray-700 hover:bg-gray-50 transition active:scale-95 shadow-2xs flex items-center gap-1.5 text-xs font-semibold">
                             <svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
@@ -249,85 +274,88 @@
                     </button>
                 </div>
 
-                <!-- Input Judul & Penulis -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">Judul Catatan:</label>
-                        <input type="text" id="note-date" maxlength="60" placeholder="Judul / Momen (Cth: Date di Cafe Sweet)" class="w-full px-3.5 py-2.5 rounded-xl border border-rose-100 shadow-2xs bg-white focus:outline-none text-xs font-medium text-gray-700">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">Ditulis Oleh:</label>
-                        <input type="text" id="note-author" maxlength="30" placeholder="Nama Penulis (Cth: Kevin)" class="w-full px-3.5 py-2.5 rounded-xl border border-rose-100 shadow-2xs bg-white focus:outline-none text-xs font-medium text-gray-700">
-                    </div>
-                </div>
-
-                <!-- Pilihan Warna Gradasi & Warna Tulisan Judul -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <!-- Gradasi Sampul -->
-                    <div class="bg-white p-3 rounded-xl border border-rose-100 shadow-2xs">
-                        <label class="block text-[11px] font-semibold text-gray-600 mb-2">Pilih Gradasi Sampul:</label>
-                        <div class="flex items-center gap-2.5 overflow-x-auto pb-1" id="gradient-picker">
-                            <!-- Swatch disuntikkan via JS -->
+                <!-- FORM INPUT METADATA -->
+                <div class="px-4 sm:px-8 pt-3 space-y-3 max-w-6xl mx-auto w-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Judul Catatan:</label>
+                            <input type="text" id="note-date" maxlength="60" placeholder="Judul / Momen (Cth: Date di Cafe Sweet)" class="w-full px-3.5 py-2.5 rounded-xl border border-rose-100 shadow-2xs bg-white focus:outline-none text-xs font-medium text-gray-700">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Ditulis Oleh:</label>
+                            <input type="text" id="note-author" maxlength="30" placeholder="Nama Penulis (Cth: Kevin)" class="w-full px-3.5 py-2.5 rounded-xl border border-rose-100 shadow-2xs bg-white focus:outline-none text-xs font-medium text-gray-700">
                         </div>
                     </div>
 
-                    <!-- Warna Tulisan Judul -->
-                    <div class="bg-white p-3 rounded-xl border border-rose-100 shadow-2xs">
-                        <label class="block text-[11px] font-semibold text-gray-600 mb-2">Pilih Warna Tulisan Judul:</label>
-                        <div class="flex items-center gap-2.5 overflow-x-auto pb-1" id="title-color-picker">
-                            <!-- Swatch disuntikkan via JS -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div class="bg-white p-2.5 rounded-xl border border-rose-100 shadow-2xs">
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1.5">Gradasi Sampul:</label>
+                            <div class="flex items-center gap-2.5 overflow-x-auto pb-1" id="gradient-picker"></div>
+                        </div>
+
+                        <div class="bg-white p-2.5 rounded-xl border border-rose-100 shadow-2xs">
+                            <label class="block text-[11px] font-semibold text-gray-600 mb-1.5">Warna Tulisan Judul:</label>
+                            <div class="flex items-center gap-2.5 overflow-x-auto pb-1" id="title-color-picker"></div>
+                        </div>
+                    </div>
+
+                    <!-- TOOLBAR FORMAT TEKS -->
+                    <div class="sticky top-[53px] z-30 flex flex-wrap items-center gap-1.5 bg-white/95 backdrop-blur-md p-2 rounded-xl border border-rose-100 shadow-2xs">
+                        <div class="flex items-center gap-1">
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('bold');" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 font-bold text-xs flex items-center justify-center">B</button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('italic');" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 italic text-xs flex items-center justify-center">I</button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('underline');" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 underline text-xs flex items-center justify-center">U</button>
+                        </div>
+                        <div class="h-4 w-px bg-rose-100 mx-0.5"></div>
+                        <div class="flex items-center gap-1">
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyLeft');" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm0 5h12v2H3V9zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/></svg></button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyCenter');" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm3 5h12v2H6V9zm-3 5h18v2H3v-2zm3 5h12v2H6v-2z"/></svg></button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyRight');" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm6 5h12v2H9V9zm-6 5h18v2H3v-2zm6 5h12v2H9v-2z"/></svg></button>
+                        </div>
+                        <div class="h-4 w-px bg-rose-100 mx-0.5"></div>
+                        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#1c1917');" class="w-4 h-4 rounded-full bg-stone-900"></button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#e11d48');" class="w-4 h-4 rounded-full bg-rose-600"></button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#db2777');" class="w-4 h-4 rounded-full bg-pink-600"></button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#9333ea');" class="w-4 h-4 rounded-full bg-purple-600"></button>
+                            <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#2563eb');" class="w-4 h-4 rounded-full bg-blue-600"></button>
                         </div>
                     </div>
                 </div>
 
-                <!-- STICKY TOOLBAR FORMAT TEKS -->
-                <div class="sticky top-[58px] z-20 flex flex-wrap items-center gap-1.5 bg-white/95 backdrop-blur-md p-2 rounded-xl border border-rose-100 shadow-2xs">
-                    <div class="flex items-center gap-1">
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('bold');" title="Tebal" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs flex items-center justify-center transition">B</button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('italic');" title="Miring" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 italic text-xs flex items-center justify-center transition">I</button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('underline');" title="Garis Bawah" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 underline text-xs flex items-center justify-center transition">U</button>
+                <!-- EDITOR UTAMA (FULLSCREEN KERTAS BUKU) -->
+                <div id="editor-paper-card" class="relative w-full min-h-[500px] px-4 sm:px-12 py-6 notebook-paper transition-all overflow-hidden flex-grow mt-3" onclick="deselectStickers(event)">
+                    <div id="editor-relative-wrapper" class="relative w-full min-h-[350px]">
+                        <div id="editor" contenteditable="true" placeholder="Tulis cerita manis kalian di sini... Teks tidak akan tertutup keyboard saat mengetik." class="w-full min-h-[350px] focus:outline-none text-gray-900 text-base leading-relaxed font-handwriting relative z-10 pb-40"></div>
+                        <!-- Layer Stiker Interaktif yang koordinatnya relatif terhadap teks -->
+                        <div id="editor-stickers-layer" class="absolute inset-0 z-20 pointer-events-none"></div>
                     </div>
-
-                    <div class="h-4 w-px bg-rose-100 mx-0.5"></div>
-
-                    <!-- Alignment -->
-                    <div class="flex items-center gap-1">
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyLeft');" title="Rata Kiri" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center transition">
-                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm0 5h12v2H3V9zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/></svg>
-                        </button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyCenter');" title="Rata Tengah" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center transition">
-                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm3 5h12v2H6V9zm-3 5h18v2H3v-2zm3 5h12v2H6v-2z"/></svg>
-                        </button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyRight');" title="Rata Kanan" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center transition">
-                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm6 5h12v2H9V9zm-6 5h18v2H3v-2zm6 5h12v2H9v-2z"/></svg>
-                        </button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('justifyFull');" title="Rata Kanan Kiri" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center transition">
-                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M3 4h18v2H3V4zm0 5h18v2H3V9zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
-                        </button>
-                    </div>
-
-                    <div class="h-4 w-px bg-rose-100 mx-0.5"></div>
-
-                    <!-- Warna Teks Editor -->
-                    <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#1c1917');" class="w-4 h-4 rounded-full bg-stone-900 hover:scale-110 transition shadow-2xs" title="Hitam"></button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#e11d48');" class="w-4 h-4 rounded-full bg-rose-600 hover:scale-110 transition shadow-2xs" title="Rose"></button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#db2777');" class="w-4 h-4 rounded-full bg-pink-600 hover:scale-110 transition shadow-2xs" title="Magenta"></button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#9333ea');" class="w-4 h-4 rounded-full bg-purple-600 hover:scale-110 transition shadow-2xs" title="Ungu"></button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#2563eb');" class="w-4 h-4 rounded-full bg-blue-600 hover:scale-110 transition shadow-2xs" title="Biru"></button>
-                        <button type="button" onmousedown="event.preventDefault(); applyFormat('foreColor', '#059669');" class="w-4 h-4 rounded-full bg-emerald-600 hover:scale-110 transition shadow-2xs" title="Hijau"></button>
-                    </div>
+                    
+                    <div id="photo-loading-status" class="relative z-30"></div>
                 </div>
 
-                <!-- Editor Catatan -->
-                <div id="editor-paper-card" class="relative flex-grow min-h-[360px] bg-white rounded-2xl border border-rose-100 shadow-2xs p-4 sm:p-6 flex flex-col gap-3 notebook-paper transition-all mb-12">
-                    <div id="editor" contenteditable="true" placeholder="Tulis cerita manis kalian di sini... Letakkan kursor di posisi yang kamu inginkan lalu tekan tombol foto melayang di kanan bawah." class="w-full min-h-[220px] focus:outline-none text-gray-900 text-sm leading-relaxed font-handwriting"></div>
-                    <div id="photo-loading-status"></div>
+                <!-- STICKER PRESET BAR (MELAYANG DI ATAS KEYBOARD / BOTTOM FIXED) -->
+                <div id="sticky-sticker-bar" class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-rose-200 p-2.5 shadow-lg flex flex-col gap-1.5 transition-all">
+                    <div class="flex items-center justify-between px-1">
+                        <span class="text-[11px] font-bold text-rose-700 flex items-center gap-1">
+                            Stiker
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <label for="upload-sticker-input" class="cursor-pointer text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg hover:bg-rose-100 transition active:scale-95 flex items-center gap-1">
+                                <svg class="w-3 h-3 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                <span>Upload</span>
+                            </label>
+                            <input type="file" id="upload-sticker-input" accept="image/png,image/webp" class="hidden" onchange="handleStickerUpload(event)">
+                        </div>
+                    </div>
+
+                    <!-- Scroll Horizontal Preset Stiker -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 min-h-[48px]" id="sticker-picker"></div>
                 </div>
 
-                <!-- Tombol Upload Foto Melayang (Posisikan Foto di Kursor) -->
-                <div class="fixed bottom-6 right-6 z-50">
-                    <label for="note-image" title="Sisipkan Foto di Kursor" class="w-12 h-12 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-full shadow-lg flex items-center justify-center cursor-pointer transition bg-primary-btn border-2 border-white">
+                <!-- TOMBOL UPLOAD FOTO DALAM TEKS (DINAIKKAN DI ATAS BAR STIKER) -->
+                <div class="fixed bottom-28 right-5 z-40">
+                    <label for="note-image" title="Sisipkan Foto Dalam Teks" class="w-12 h-12 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-full shadow-lg flex items-center justify-center cursor-pointer transition bg-primary-btn border-2 border-white">
                         <svg class="w-6 h-6 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>
                     </label>
                     <input type="file" id="note-image" accept="image/jpeg,image/png,image/webp" multiple class="hidden" onchange="handleImageUpload(event)">
@@ -337,7 +365,7 @@
         </div>
     </div>
 
-    <!-- MODAL PREVIEW FOTO PERBESAR -->
+    <!-- MODAL PREVIEW FOTO -->
     <div id="preview-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex-col items-center justify-center p-4" onclick="closePreviewModal()">
         <button onclick="closePreviewModal()" class="absolute top-5 right-5 text-white bg-white/20 hover:bg-white/40 w-9 h-9 rounded-full flex items-center justify-center font-bold text-base shadow-lg transition">
             <svg class="w-4 h-4 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -367,9 +395,9 @@
 
         let editingId = null;
         let globalNotes = [];
-        let savedRange = null; // MENGINGAT POSISI KURSOR TERAKHIR
+        let savedRange = null;
+        let activeStickersList = [];
 
-        // OPSI WARNA GRADASI SAMPUL
         const coverGradients = [
             { id: 'brown', css: 'linear-gradient(135deg, #3d2b1f, #231710)', label: 'Coklat' },
             { id: 'sunset', css: 'linear-gradient(135deg, #ff7e5f, #feb47b)', label: 'Sunset Coral' },
@@ -380,7 +408,6 @@
             { id: 'berry', css: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)', label: 'Berry' }
         ];
 
-        // OPSI WARNA TULISAN JUDUL
         const titleColors = [
             { id: 'white', code: '#ffffff', label: 'Putih' },
             { id: 'black', code: '#1c1917', label: 'Hitam' },
@@ -395,7 +422,6 @@
 
         const svgThemeIcon = `<svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>`;
 
-        // SIMPAN POSISI KURSOR SECARA PERSISTEN
         function saveSelection() {
             const editor = document.getElementById('editor');
             const sel = window.getSelection();
@@ -403,6 +429,21 @@
                 const range = sel.getRangeAt(0);
                 if (editor.contains(range.commonAncestorContainer)) {
                     savedRange = range.cloneRange();
+                }
+            }
+        }
+
+        function scrollToSelection() {
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                if (rect.bottom > 0) {
+                    const scrollContainer = document.getElementById('form-screen');
+                    const threshold = window.innerHeight - 180;
+                    if (rect.bottom > threshold) {
+                        scrollContainer.scrollBy({ top: rect.bottom - threshold + 40, behavior: 'smooth' });
+                    }
                 }
             }
         }
@@ -441,6 +482,261 @@
                     selectedTitleColor = tc.code;
                 };
                 container.appendChild(swatch);
+            });
+        }
+
+        // ==========================================
+        // MULTI-STIKER ENGINE (MUNCUL OTOMATIS DI TENGAH LAYAR)
+        // ==========================================
+        function createStickerElement(stickerData, isEditable = true) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `interactive-sticker ${isEditable ? 'pointer-events-auto' : ''}`;
+            wrapper.id = 'stk_' + stickerData.id;
+            
+            wrapper.style.left = (stickerData.x || 30) + 'px';
+            wrapper.style.top = (stickerData.y || 20) + 'px';
+            wrapper.style.width = (stickerData.width || 80) + 'px';
+            wrapper.style.height = (stickerData.height || 80) + 'px';
+            wrapper.style.transform = `rotate(${stickerData.rotation || 0}deg)`;
+
+            wrapper.dataset.id = stickerData.id;
+            wrapper.dataset.x = stickerData.x || 30;
+            wrapper.dataset.y = stickerData.y || 20;
+            wrapper.dataset.width = stickerData.width || 80;
+            wrapper.dataset.height = stickerData.height || 80;
+            wrapper.dataset.rotation = stickerData.rotation || 0;
+            wrapper.dataset.url = stickerData.url;
+
+            wrapper.innerHTML = `<img src="${stickerData.url}" alt="stiker" />`;
+
+            if (isEditable) {
+                const controls = document.createElement('div');
+                controls.className = 'sticker-controls';
+                controls.innerHTML = `
+                    <div class="sticker-handle handle-delete" title="Hapus">✕</div>
+                    <div class="sticker-handle handle-rotate" title="Putar">↻</div>
+                    <div class="sticker-handle handle-resize" title="Ubah Ukuran">⇲</div>
+                `;
+                wrapper.appendChild(controls);
+                initStickerInteractivity(wrapper);
+            }
+
+            return wrapper;
+        }
+
+        function addStickerToEditor(url) {
+            const stickerId = 's_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+            const wrapperElem = document.getElementById('editor-relative-wrapper');
+            const formScreen = document.getElementById('form-screen');
+            
+            const rect = wrapperElem.getBoundingClientRect();
+            
+            // Perhitungan posisi Y agar stiker muncul tepat di tengah layar yang sedang dilihat
+            const viewportCenterY = (window.innerHeight / 2) - rect.top;
+            const computedY = Math.max(20, Math.round(viewportCenterY - 40));
+            const computedX = Math.max(20, Math.round((rect.width / 2) - 40));
+
+            const stickerData = {
+                id: stickerId,
+                url: url,
+                x: computedX,
+                y: computedY,
+                width: 85,
+                height: 85,
+                rotation: 0
+            };
+
+            activeStickersList.push(stickerData);
+            const stickerElem = createStickerElement(stickerData, true);
+            document.getElementById('editor-stickers-layer').appendChild(stickerElem);
+            selectSticker(stickerElem);
+        }
+
+        function deselectStickers(e) {
+            if (e && e.target.closest('.interactive-sticker')) return;
+            document.querySelectorAll('.interactive-sticker').forEach(s => s.classList.remove('active'));
+        }
+
+        function selectSticker(elem) {
+            document.querySelectorAll('.interactive-sticker').forEach(s => s.classList.remove('active'));
+            elem.classList.add('active');
+        }
+
+        function initStickerInteractivity(wrapper) {
+            let isDragging = false, isRotating = false, isResizing = false;
+            let startX, startY, startWidth, startHeight, startAngle, currentRotation = 0;
+
+            const deleteBtn = wrapper.querySelector('.handle-delete');
+            const rotateBtn = wrapper.querySelector('.handle-rotate');
+            const resizeBtn = wrapper.querySelector('.handle-resize');
+
+            wrapper.addEventListener('pointerdown', (e) => {
+                if (e.target.classList.contains('sticker-handle')) return;
+                e.stopPropagation();
+                selectSticker(wrapper);
+                isDragging = true;
+                startX = e.clientX - parseFloat(wrapper.dataset.x);
+                startY = e.clientY - parseFloat(wrapper.dataset.y);
+                wrapper.setPointerCapture(e.pointerId);
+            });
+
+            wrapper.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                let newX = e.clientX - startX;
+                let newY = e.clientY - startY;
+                wrapper.style.left = newX + 'px';
+                wrapper.style.top = newY + 'px';
+                wrapper.dataset.x = newX;
+                wrapper.dataset.y = newY;
+                updateStickerData(wrapper.dataset.id, { x: newX, y: newY });
+            });
+
+            wrapper.addEventListener('pointerup', (e) => {
+                if (isDragging) {
+                    isDragging = false;
+                    try { wrapper.releasePointerCapture(e.pointerId); } catch(err){}
+                }
+            });
+
+            // RESIZE LOGIC
+            resizeBtn.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseFloat(wrapper.dataset.width);
+                startHeight = parseFloat(wrapper.dataset.height);
+                resizeBtn.setPointerCapture(e.pointerId);
+            });
+
+            resizeBtn.addEventListener('pointermove', (e) => {
+                if (!isResizing) return;
+                const diffX = e.clientX - startX;
+                const newW = Math.max(40, startWidth + diffX);
+                const newH = Math.max(40, startHeight + diffX);
+                wrapper.style.width = newW + 'px';
+                wrapper.style.height = newH + 'px';
+                wrapper.dataset.width = newW;
+                wrapper.dataset.height = newH;
+                updateStickerData(wrapper.dataset.id, { width: newW, height: newH });
+            });
+
+            resizeBtn.addEventListener('pointerup', (e) => {
+                isResizing = false;
+                try { resizeBtn.releasePointerCapture(e.pointerId); } catch(err){}
+            });
+
+            // ROTATE LOGIC
+            rotateBtn.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                isRotating = true;
+                const rect = wrapper.getBoundingClientRect();
+                const centerElemX = rect.left + rect.width / 2;
+                const centerElemY = rect.top + rect.height / 2;
+                startAngle = Math.atan2(e.clientY - centerElemY, e.clientX - centerElemX);
+                currentRotation = parseFloat(wrapper.dataset.rotation) || 0;
+                rotateBtn.setPointerCapture(e.pointerId);
+            });
+
+            rotateBtn.addEventListener('pointermove', (e) => {
+                if (!isRotating) return;
+                const rect = wrapper.getBoundingClientRect();
+                const centerElemX = rect.left + rect.width / 2;
+                const centerElemY = rect.top + rect.height / 2;
+                const newAngle = Math.atan2(e.clientY - centerElemY, e.clientX - centerElemX);
+                let deg = Math.round((newAngle - startAngle) * (180 / Math.PI) + currentRotation);
+                wrapper.style.transform = `rotate(${deg}deg)`;
+                wrapper.dataset.rotation = deg;
+                updateStickerData(wrapper.dataset.id, { rotation: deg });
+            });
+
+            rotateBtn.addEventListener('pointerup', (e) => {
+                isRotating = false;
+                try { rotateBtn.releasePointerCapture(e.pointerId); } catch(err){}
+            });
+
+            // DELETE LOGIC
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                activeStickersList = activeStickersList.filter(s => s.id !== wrapper.dataset.id);
+                wrapper.remove();
+            });
+        }
+
+        function updateStickerData(id, newProps) {
+            const idx = activeStickersList.findIndex(s => s.id === id);
+            if (idx !== -1) {
+                activeStickersList[idx] = { ...activeStickersList[idx], ...newProps };
+            }
+        }
+
+        function compressStickerPNG(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleStickerUpload(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            try {
+                const compressedPngBase64 = await compressStickerPNG(file);
+                await db.collection('stickers').add({
+                    url: compressedPngBase64,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("Stiker berhasil ditambahkan ke preset!");
+            } catch(err) {
+                alert("Gagal mengunggah stiker: " + err.message);
+            } finally {
+                e.target.value = '';
+            }
+        }
+
+        function listenToStickers() {
+            db.collection('stickers').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                const container = document.getElementById('sticker-picker');
+                if(!container) return;
+                container.innerHTML = '';
+
+                if(snapshot.empty) {
+                    container.innerHTML = `<span class="text-xs text-gray-400 italic">Belum ada stiker. Klik + Upload.</span>`;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const img = document.createElement('img');
+                    img.src = data.url;
+                    img.className = 'w-11 h-11 object-contain rounded-xl cursor-pointer hover:scale-110 transition border border-rose-100 bg-rose-50/50 p-1 shrink-0';
+                    img.onclick = () => addStickerToEditor(data.url);
+                    container.appendChild(img);
+                });
             });
         }
 
@@ -493,7 +789,10 @@
 
         function openForm(id = null) {
             editingId = id;
-            savedRange = null; // Reset ingatan kursor saat buka form baru
+            savedRange = null;
+            activeStickersList = [];
+            document.getElementById('editor-stickers-layer').innerHTML = '';
+
             document.getElementById('form-screen').classList.remove('hidden');
             document.getElementById('form-screen').classList.add('flex');
             document.body.style.overflow = 'hidden';
@@ -507,6 +806,14 @@
                     document.getElementById('editor').innerHTML = note.content || '';
                     selectedCoverGradient = note.coverGradient || coverGradients[0].css;
                     selectedTitleColor = note.titleColor || titleColors[0].code;
+                    
+                    if(note.stickersList && Array.isArray(note.stickersList)) {
+                        activeStickersList = note.stickersList;
+                        note.stickersList.forEach(stk => {
+                            const stickerElem = createStickerElement(stk, true);
+                            document.getElementById('editor-stickers-layer').appendChild(stickerElem);
+                        });
+                    }
                 }
             } else {
                 document.getElementById('form-title').innerHTML = 'Tulis Catatan Baru';
@@ -590,14 +897,12 @@
 
         function insertImageToEditor(src) {
             const editor = document.getElementById('editor');
-            
             const imgContainer = document.createElement('div');
             imgContainer.className = 'inline-photo-wrapper my-3 text-center contenteditable-false';
             imgContainer.innerHTML = `<img src="${src}" class="rounded-xl shadow-xs border border-rose-100 max-w-full mx-auto my-1.5 inline-block" />`;
 
             const sel = window.getSelection();
 
-            // KEMBALIKAN KURSOR KE POSISI TERSIMPAN (JIKA ADA)
             if (savedRange) {
                 sel.removeAllRanges();
                 sel.addRange(savedRange);
@@ -613,20 +918,17 @@
                     p.innerHTML = '<br>';
                     imgContainer.after(p);
 
-                    // Pindahkan kursor persis di bawah foto yang baru di-insert
                     const newRange = document.createRange();
                     newRange.setStart(p, 0);
                     newRange.collapse(true);
                     sel.removeAllRanges();
                     sel.addRange(newRange);
 
-                    // Update ingatan kursor terbaru
                     savedRange = newRange.cloneRange();
                     return;
                 }
             }
 
-            // Fallback (jika kursor sama sekali belum pernah diarahkan ke teks)
             editor.appendChild(imgContainer);
             const p = document.createElement('p');
             p.innerHTML = '<br>';
@@ -659,17 +961,30 @@
                     author: authorInput || 'Anonim',
                     coverGradient: selectedCoverGradient,
                     titleColor: selectedTitleColor,
-                    content: contentHtml
+                    content: contentHtml,
+                    stickersList: activeStickersList
                 };
+
+                let savedDocId = editingId;
 
                 if (editingId) {
                     await db.collection('love_notes').doc(editingId).update(notePayload);
                 } else {
                     notePayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                    await db.collection('love_notes').add(notePayload);
+                    const docRef = await db.collection('love_notes').add(notePayload);
+                    savedDocId = docRef.id;
                 }
+
+                const existingIndex = globalNotes.findIndex(n => n.id === savedDocId);
+                if (existingIndex !== -1) {
+                    globalNotes[existingIndex] = { ...globalNotes[existingIndex], ...notePayload };
+                } else {
+                    globalNotes.unshift({ id: savedDocId, ...notePayload });
+                }
+
                 closeForm();
-                closeReadScreen();
+                openReadScreen(savedDocId);
+
             } catch (err) {
                 alert("Gagal menyimpan ke server: " + err.message);
             } finally {
@@ -685,12 +1000,7 @@
 
         function filterNotes() {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
-            
-            if (!query) {
-                renderGrid(globalNotes);
-                return;
-            }
-
+            if (!query) { renderGrid(globalNotes); return; }
             const filtered = globalNotes.filter(note => {
                 const titleMatch = (note.date || '').toLowerCase().includes(query);
                 const authorMatch = (note.author || '').toLowerCase().includes(query);
@@ -699,23 +1009,17 @@
                 const plainText = (tempDiv.textContent || tempDiv.innerText || '').toLowerCase();
                 return titleMatch || authorMatch || plainText.includes(query);
             });
-
             renderGrid(filtered, true);
         }
 
         function listenToNotes() {
-            db.collection('love_notes').orderBy('createdAt', 'desc').onSnapshot(
-                (snapshot) => {
-                    globalNotes = [];
-                    snapshot.forEach((doc) => {
-                        globalNotes.push({ id: doc.id, ...doc.data() });
-                    });
-                    filterNotes();
-                },
-                (error) => {
-                    console.error("Firestore Listen Error:", error);
-                }
-            );
+            db.collection('love_notes').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+                globalNotes = [];
+                snapshot.forEach((doc) => {
+                    globalNotes.push({ id: doc.id, ...doc.data() });
+                });
+                filterNotes();
+            });
         }
 
         function renderGrid(notes, isSearching = false) {
@@ -734,12 +1038,7 @@
             if (notes.length === 0) {
                 if (isSearching) {
                     container.className = "flex justify-center my-8 col-span-full";
-                    container.innerHTML = `
-                        <div class="text-center py-6 text-gray-400">
-                            <svg class="w-8 h-8 mx-auto mb-2 stroke-current text-rose-300" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <p class="text-xs font-medium">Catatan tidak ditemukan...</p>
-                        </div>
-                    `;
+                    container.innerHTML = `<div class="text-center py-6 text-gray-400"><p class="text-xs font-medium">Catatan tidak ditemukan...</p></div>`;
                 } else {
                     container.className = "flex justify-center mt-8 col-span-full";
                     container.innerHTML = `
@@ -769,23 +1068,19 @@
 
                 card.innerHTML = `
                     <div class="relative z-10 flex flex-col justify-between h-full w-full">
-                        
                         <div class="flex items-center justify-between gap-1.5 w-full">
                             <span class="text-[10px] font-semibold bg-black/25 backdrop-blur-xs px-2 py-0.5 rounded-md text-white border border-white/20 truncate max-w-[78%] shrink-0">
                                  ${note.author || 'Anonim'}
                             </span>
-                            
-                            <button onclick="event.stopPropagation(); openForm('${note.id}')" title="Edit Sampul & Catatan" class="w-6 h-6 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-white transition active:scale-90 shrink-0">
+                            <button onclick="event.stopPropagation(); openForm('${note.id}')" class="w-6 h-6 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-white transition active:scale-90 shrink-0">
                                 <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                             </button>
                         </div>
-
                         <div class="my-auto py-1 w-full overflow-hidden">
                             <h3 class="cover-title font-bold font-handwriting line-clamp-3" style="color: ${titleColor} !important;">
                                 ${note.date || 'Catatan Momen'}
                             </h3>
                         </div>
-
                         <div class="pt-1.5 border-t border-white/20 shrink-0 w-full flex items-center justify-between">
                             <span class="text-[10px] text-white font-medium flex items-center gap-1 drop-shadow-xs">
                                 <svg class="w-3 h-3 stroke-current text-white/90" fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
@@ -813,6 +1108,17 @@
             readContentDiv.querySelectorAll('img').forEach(img => {
                 img.addEventListener('click', () => openPreviewModal(img.src));
             });
+
+            // RENDER MULTI STIKER SECARA PRESISI DI LAYAR BACA
+            const readStickersLayer = document.getElementById('read-stickers-layer');
+            readStickersLayer.innerHTML = '';
+            
+            if (note.stickersList && Array.isArray(note.stickersList)) {
+                note.stickersList.forEach(stk => {
+                    const stickerElem = createStickerElement(stk, false);
+                    readStickersLayer.appendChild(stickerElem);
+                });
+            }
 
             document.getElementById('btn-edit').setAttribute('onclick', `openForm('${note.id}')`);
             document.getElementById('btn-delete').setAttribute('onclick', `deleteNote('${note.id}')`);
@@ -854,11 +1160,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadSavedTheme();
             listenToNotes();
+            listenToStickers();
 
-            // SENSOR INGATAN KURSOR EDITOR
             const editorDiv = document.getElementById('editor');
-            ['keyup', 'mouseup', 'click', 'focus', 'touchend'].forEach(evt => {
-                editorDiv.addEventListener(evt, saveSelection);
+            ['keyup', 'mouseup', 'click', 'focus', 'touchend', 'input'].forEach(evt => {
+                editorDiv.addEventListener(evt, () => {
+                    saveSelection();
+                    scrollToSelection();
+                });
             });
         });
     </script>
