@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Siklus Simerah</title>
+  <!-- Manifest Khusus Haid -->
+  <link rel="manifest" href="haid-manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Animasi Transisi Tema */
@@ -179,6 +181,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
     // Konfigurasi Firebase
     const firebaseConfig = {
@@ -192,7 +195,105 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const messaging = getMessaging(app);
     const haidRef = collection(db, "haid_tracker");
+
+    // -------------------------------------------------------------
+    // REGISTRASI SERVICE WORKER KHUSUS HAID (TIDAK BENTROK WITH GAME/CHAT)
+    // -------------------------------------------------------------
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('haid-sw.js')
+        .then((reg) => console.log('Haid SW Registered:', reg))
+        .catch((err) => console.error('Haid SW Registration Failed:', err));
+    }
+
+    function initHaidNotificationPermission() {
+      if ("Notification" in window) {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            getToken(messaging, { serviceWorkerRegistration: navigator.serviceWorker.ready })
+              .catch((err) => console.log("FCM status:", err));
+          }
+        });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // LOGIKA PENGECEKAN JADWAL NOTIFIKASI HAID & PREDIKSI H-5
+    // -------------------------------------------------------------
+    function processNotifications(docs) {
+      if (!docs || docs.length === 0) return;
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+      const latestItem = docs[0];
+      const siklusList = getNormalizedSiklusList(latestItem);
+      if (!siklusList || siklusList.length === 0) return;
+
+      const lastSiklus = siklusList[siklusList.length - 1];
+      const isSedangHaid = !lastSiklus.tanggalSelesai;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const currentHour = new Date().getHours();
+      const todayStr = today.toISOString().split('T')[0];
+
+      // 1. KONDISI SEDANG HAID (Pagi, Siang, Malam)
+      if (isSedangHaid) {
+        const startStr = siklusList[0].tanggalMulai;
+        if (!startStr) return;
+
+        const parts = startStr.split('-');
+        const hpht = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+
+        const diffTime = Math.abs(today - hpht);
+        const hariKe = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        let slot = '';
+        if (currentHour >= 6 && currentHour < 11) slot = 'pagi';
+        else if (currentHour >= 12 && currentHour < 15) slot = 'siang';
+        else if (currentHour >= 18 && currentHour < 21) slot = 'malam';
+
+        if (slot !== '') {
+          const key = `haid_notif_${todayStr}_${slot}`;
+          if (!localStorage.getItem(key)) {
+            new Notification(`Hari ke ${hariKe} Haid`, {
+              body: "Istirahat yang cukup makan minum yang sehat yaww sayangg💕",
+              icon: "https://cdn-icons-png.flaticon.com/512/2965/2965567.png"
+            });
+            localStorage.setItem(key, "true");
+          }
+        }
+      } 
+      // 2. KONDISI TIDAK HAID -> H-5 PREDIKSI (1x Sehari Pagi)
+      else {
+        const startStr = siklusList[0].tanggalMulai;
+        if (!startStr) return;
+
+        const parts = startStr.split('-');
+        const hpht = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+
+        const target28 = new Date(hpht);
+        target28.setDate(hpht.getDate() + 28);
+
+        const diffTime = target28 - today;
+        const sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Hanya jika H-5 s/d H-1 & Waktu Pagi (06.00 - 11.00)
+        if (sisaHari <= 5 && sisaHari > 0) {
+          if (currentHour >= 6 && currentHour < 11) {
+            const key = `prediksi_notif_${todayStr}`;
+            if (!localStorage.getItem(key)) {
+              new Notification(`Kayanya ${sisaHari} hari lagi si merah keluar nih sayangg`, {
+                body: "Tetap jaga pola mood, makan, minum yaww sayanggku💕",
+                icon: "https://cdn-icons-png.flaticon.com/512/2965/2965567.png"
+              });
+              localStorage.setItem(key, "true");
+            }
+          }
+        }
+      }
+    }
 
     // State Theme & Data Cache
     let currentTheme = 'romantic'; 
@@ -875,9 +976,12 @@
       });
 
       renderCards();
+      processNotifications(rawDocs);
     }, (error) => {
       console.error("Firestore Listen Error:", error);
     });
+
+    initHaidNotificationPermission();
   </script>
 </body>
 </html>
