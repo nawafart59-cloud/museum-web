@@ -1,36 +1,16 @@
 const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
+    let serviceAccount;
     try {
-        const rawEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
-        if (!rawEnv) {
-            throw new Error("FIREBASE_SERVICE_ACCOUNT tidak ditemukan di Environment Variables.");
-        }
-
-        let serviceAccount;
-        if (rawEnv.trim().startsWith('{')) {
-            serviceAccount = JSON.parse(rawEnv);
-        } else {
-            const decoded = Buffer.from(rawEnv, 'base64').toString('utf8');
-            serviceAccount = JSON.parse(decoded);
-        }
-
-        // Memastikan private_key dibersihkan secara presisi
-        let privateKey = serviceAccount.private_key;
-        if (typeof privateKey === 'string') {
-            privateKey = privateKey.replace(/\\n/g, '\n');
-        }
-
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: serviceAccount.project_id,
-                clientEmail: serviceAccount.client_email,
-                privateKey: privateKey
-            })
-        });
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     } catch (e) {
-        console.error("Gagal inisialisasi Firebase Admin:", e.message);
+        console.error("Gagal memparsing FIREBASE_SERVICE_ACCOUNT:", e);
     }
+
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
 }
 
 exports.handler = async function(event, context) {
@@ -39,7 +19,7 @@ exports.handler = async function(event, context) {
     }
 
     try {
-        const { text } = JSON.parse(event.body || '{}');
+        const { text } = JSON.parse(event.body);
 
         const tokensSnapshot = await admin.firestore().collection('fcm_tokens').get();
         const tokens = [];
@@ -54,26 +34,23 @@ exports.handler = async function(event, context) {
             return { statusCode: 200, body: JSON.stringify({ message: 'Tidak ada token.' }) };
         }
 
-        const sendPromises = tokens.map(token => {
-            return admin.messaging().send({
-                token: token,
-                notification: {
-                    title: "Pesan Baru dari Sayang! 💖",
-                    body: text || "Ada pesan darurat baru untukmu."
-                },
-                data: {
-                    title: "Pesan Baru dari Sayang! 💖",
-                    body: text || "Ada pesan darurat baru untukmu.",
-                    url: "https://sign-of-love.netlify.app/"
-                }
-            });
-        });
+        const message = {
+            notification: {
+                title: "Pesan Baru dari Sayang! 💖",
+                body: text || "Ada pesan darurat baru untukmu."
+            },
+            data: {
+                text: text || "",
+                url: "https://museum-web.netlify.app/"
+            },
+            tokens: tokens
+        };
 
-        const results = await Promise.allSettled(sendPromises);
+        const response = await admin.messaging().sendEachForMulticast(message);
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ success: true, results: results })
+            body: JSON.stringify({ success: true, response: response })
         };
     } catch (error) {
         console.error('Error mengirim notifikasi:', error);
