@@ -12,40 +12,11 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Menangkap notifikasi dari background/sistem
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || payload.data?.title || "Pesan dari Sayang 💖";
-  const notificationBody = payload.notification?.body || payload.data?.body || "Ada pesan baru!";
-
+  const notificationTitle = payload.notification.title;
   const notificationOptions = {
-    body: notificationBody,
-    icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 424C256 424 100 290 100 186C100 128 146 82 204 82C236 82 265 98 284 124C303 98 332 82 364 82C422 82 468 128 468 186C468 290 256 424 256 424Z" fill="%23ff4b72"/></svg>',
-    badge: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 424C256 424 100 290 100 186C100 128 146 82 204 82C236 82 265 98 284 124C303 98 332 82 364 82C422 82 468 128 468 186C468 290 256 424 256 424Z" fill="%23ff4b72"/></svg>',
-    vibrate: [200, 100, 200],
-    data: {
-      url: payload.data?.url || "https://sign-of-love.netlify.app/"
-    }
+    body: payload.notification.body,
+    icon: 'https://cdn-icons-png.flaticon.com/512/831/831276.png'
   };
-
   self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Membuka web ketika notifikasi sistem diketik
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const targetUrl = event.notification.data?.url || "https://sign-of-love.netlify.app/";
-  
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
-        if (client.url === targetUrl && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
-    })
-  );
 });
